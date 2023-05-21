@@ -25,15 +25,6 @@ class DB:
         else:
             return res.fetchall()
 
-    def _execute_many(self, query: str, *args) -> list:
-        try:
-            res = self._cursor.executemany(query, args)
-            self._connection.commit()
-        except Exception as err:
-            raise DBExecuteQueryError(str(err))
-        else:
-            return res.fetchall()
-
     @staticmethod
     def validate_name(name: str) -> bool:
         return re.match('^([а-я]+)$', name) is not None
@@ -105,7 +96,7 @@ class DB:
             VALUES (?, ?, ?, ?);
         """, name.capitalize(), age, gender, owner_id)
 
-    def create_joсkey(self,
+    def create_jockey(self,
                      name: str,
                      age: int,
                      address: str,
@@ -115,15 +106,15 @@ class DB:
         try:
             age = int(age)
         except TypeError:
-            raise JoсkeyAgeError()
+            raise JockeyAgeError()
 
         if not DB.validate_name(name):
             raise NameError()
         elif age < 18:
-            raise JoсkeyAgeError()
+            raise JockeyAgeError()
 
         self._execute("""
-            INSERT INTO "Joсkey" (name, age, address, rating)
+            INSERT INTO "Jockey" (name, age, address, rating)
             VALUES (?, ?, ?, ?);
         """, name.capitalize(), age, address, rating)
 
@@ -150,7 +141,7 @@ class DB:
                            result_time: int,
                            race_id: int,
                            horse_id: int,
-                           joсkey_id: int):
+                           jockey_id: int):
         try:
             result_place = int(result_place)
             result_time = int(result_time)
@@ -160,9 +151,9 @@ class DB:
             raise ResultAndPlaceError()
 
         self._execute("""
-            INSERT INTO "Race_result" (result_place, result_time, race_id, horse_id, joсkey_id)
+            INSERT INTO "Race_result" (result_place, result_time, race_id, horse_id, jockey_id)
             VALUES (?, ?, ?, ?, ?);
-        """, result_place, result_time, race_id, horse_id, joсkey_id)        
+        """, result_place, result_time, race_id, horse_id, jockey_id)        
 
 
     def get_all_horses(self) -> list[tuple]:
@@ -180,7 +171,73 @@ class DB:
     def get_all_owners(self) -> list[tuple]:
         return self._execute("""
             SELECT
-                id, name, telephone, address
+                id, name
+            FROM
+                "Owner";
+        """)
+
+    def get_all_jockeys(self) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                id, name
+            FROM
+                "Jockey";
+        """)
+
+    def get_all_races(self) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                id, name
+            FROM
+                "Race";
+        """)
+
+    def get_all_hippodromes(self) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                id, name
+            FROM
+                "Hippodrome";
+        """)
+
+    def get_jockeys_that_not_in_race(self, race_id: int) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                id, name
+            FROM
+                "Jockey"
+            WHERE
+                id NOT IN (
+                    SELECT
+                        jockey_id
+                    FROM
+                        "Race_result"
+                    WHERE
+                        race_id = ?
+                );
+        """, race_id)
+
+    def get_horses_that_not_in_race(self, race_id: int) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                id, name
+            FROM
+                "Horse"
+            WHERE
+                id NOT IN (
+                    SELECT
+                        horse_id
+                    FROM
+                        "Race_result"
+                    WHERE
+                        race_id = ?
+                );
+        """, race_id)
+
+    def get_owner(self, owner_id) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                name, address, telephone
             FROM
                 "Owner";
         """)
@@ -198,7 +255,7 @@ class DB:
     def get_horse(self, horse_id: int) -> list[tuple]:
         return self._execute("""
             SELECT
-                h.name, h.age, h.gender, o.name
+                h.name, h.age, h.gender, o.name, o.id
             FROM
                 "Horse" as h
             JOIN
@@ -209,31 +266,19 @@ class DB:
                 h.id = ?;
         """, horse_id)
 
-    def get_all_joсkeys(self) -> list[tuple]:
+    def get_races_with_horse(self, horse_id: int) -> list[tuple]:
         return self._execute("""
             SELECT
-                id, name, age, address, rating
-            FROM
-                "Joсkey";
-        """)
-
-    def get_all_races(self) -> list[tuple]:
-        return self._execute("""
-            SELECT
-                r.id, r.name, r.date, h.name
+                r.id, r.name
             FROM
                 "Race" as r
             JOIN
-                "Hippodrome" as h;
-        """)
-
-    def get_all_hippodromes(self) -> list[tuple]:
-        return self._execute("""
-            SELECT
-                id, name
-            FROM
-                "Hippodrome";
-        """)
+                "Race_result" as rr
+            ON
+                rr.race_id = r.id
+            WHERE
+                rr.horse_id = ?;
+        """, horse_id)
 
     def get_race(self, race_id: int) -> list[tuple]:
         return self._execute("""
@@ -252,13 +297,14 @@ class DB:
     def get_race_results(self, race_id: int) -> list[tuple]:
         return self._execute("""
             SELECT
-                rr.id, j.name, h.name, rr.result_place, rr.result_time
+                rr.id, j.name, h.name, rr.result_place, rr.result_time,
+                j.id, h.id
             FROM
                 "Race_result" as rr
             JOIN
-                "Joсkey" as j
+                "Jockey" as j
             ON
-                j.id = rr.joсkey_id
+                j.id = rr.jockey_id
             JOIN
                 "Horse" as h
             ON
@@ -266,6 +312,50 @@ class DB:
             WHERE
                 rr.race_id = ?;
         """, race_id)
+
+    def get_jockey(self, jockey_id: int) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                name, age, address, rating
+            FROM
+                "Jockey"
+            WHERE
+                id = ?;
+        """, jockey_id)
+
+    def get_jockeys_races(self, jockey_id: int) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                r.id, r.name
+            FROM
+                "Race_result" as rr
+            JOIN
+                "Race" as r
+            ON
+                rr.race_id = r.id
+            WHERE
+                rr.jockey_id = ?;
+        """, jockey_id)
+
+    def get_hippodrome_races(self, hippodrome_id: int) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                id, name
+            FROM
+                "Race"
+            WHERE
+                hippodrome_id = ?;
+        """, hippodrome_id)
+
+    def get_hippodrome(self, hippodrome_id: int) -> list[tuple]:
+        return self._execute("""
+            SELECT
+                name
+            FROM
+                Hippodrome
+            WHERE
+                id = ?;
+        """, hippodrome_id)
 
     def delete_owner(self, owner_id: int):
         self._execute("""
@@ -279,9 +369,9 @@ class DB:
             WHERE id = ?;
         """, horse_id)
 
-    def delete_joсkey(self, jokey_id: int):
+    def delete_jockey(self, jokey_id: int):
         self._execute("""
-            DELETE FROM "Joсkey"
+            DELETE FROM "Jockey"
             WHERE id = ?;
         """, jokey_id)
 
@@ -334,7 +424,7 @@ class AgeError(Exception):
             err_message = 'Возраст должен быть представлен как целое неотрицательное число.'
         super().__init__('Неправильный формат возраста:\n'+err_message)
 
-class JoсkeyAgeError(AgeError):
+class JockeyAgeError(AgeError):
     def __init__(self) -> None:
         super().__init__('Возраст жокея должен быть представлен как целое число не меньшее 18.')
 

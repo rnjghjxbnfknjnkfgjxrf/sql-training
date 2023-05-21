@@ -10,44 +10,38 @@ ctk.set_appearance_mode('dark')
 class App:
     def __init__(self, db: DB)  -> None:
         self._db = db
-        self._main_window = ctk.CTk()#tk.Tk()#
-        self._main_window.geometry('1200x750')
+        self._main_window = ctk.CTk()
+        self._main_window.geometry('800x570')
         self._main_window.title('Заезды')
 
-        self._tab_view = ctk.CTkTabview(self._main_window, 1200, 750)#ttk.Notebook(self._main_window, width=1200, height=700)
-        races_tab = self._tab_view.add('Заезды')#ttk.Frame(self._tab_view)#
-        jockeys_tab = self._tab_view.add('Жокеи')#ttk.Frame(self._tab_view)#
-        hippodromes_tab = self._tab_view.add('Ипподромы')#ttk.Frame(self._tab_view)#
-        owners_tab = self._tab_view.add('Владельцы')#ttk.Frame(self._tab_view)#
-        horses_tab = self._tab_view.add('Лошади')#ttk.Frame(self._tab_view)
+        self._tab_view = ctk.CTkTabview(self._main_window, 800, 500)
+        races_tab = self._tab_view.add('Заезды')
+        jockeys_tab = self._tab_view.add('Жокеи')
+        hippodromes_tab = self._tab_view.add('Ипподромы')
+        owners_tab = self._tab_view.add('Владельцы')
+        horses_tab = self._tab_view.add('Лошади')
 
-        # self._tab_view.add(races_tab, text='Заезды')
-        # self._tab_view.add(jockeys_tab, text='')
-        # self._tab_view.add(hippodromes_tab)
-        # self._tab_view.add(owners_tab)
-        # self._tab_view.add(horses_tab)
-
-
-        self._races_frame = ctk.CTkScrollableFrame(races_tab, 1150, 730)
-        ctk.CTkButton(self._races_frame,
-                      text='Добавить заезд',
-                      command=self._show_race_adding_window).pack()
+        self._races_frame = ctk.CTkScrollableFrame(races_tab, 780, 480)
         self._races_frame.pack()
+        ctk.CTkButton(races_tab,
+                      text='Добавить заезд',
+                      command=self._show_race_adding_window).pack(fill='x')
 
-        self._jockeys_frame = ctk.CTkScrollableFrame(jockeys_tab, 1150, 730)
+
+        self._jockeys_frame = ctk.CTkScrollableFrame(jockeys_tab, 780, 480)
         self._jockeys_frame.pack()
 
-        self._hippodromes_frame = ctk.CTkScrollableFrame(hippodromes_tab, 1150, 730)
+        self._hippodromes_frame = ctk.CTkScrollableFrame(hippodromes_tab, 780, 480)
         self._hippodromes_frame.pack()
 
 
-        self._owners_frame = ctk.CTkScrollableFrame(owners_tab, 1150, 730)
+        self._owners_frame = ctk.CTkScrollableFrame(owners_tab, 780, 480)
         self._owners_frame.pack()
 
-        self._horses_frame = ctk.CTkScrollableFrame(horses_tab, 1150, 730)
+        self._horses_frame = ctk.CTkScrollableFrame(horses_tab, 780, 480)
         self._horses_frame.pack()
 
-        self._tab_view.grid(column=0, row=0)
+        self._tab_view.pack()
 
     def _fill_race_frame(self):
         for race in self._db.get_all_races():
@@ -56,10 +50,38 @@ class App:
                           command=self._show_race_info,
                           arg=race[0]).pack(padx=10,pady=10)
 
+    def _fill_jockeys_frame(self):
+        for jockey in self._db.get_all_jockeys():
+            ArgumentSendButton(self._jockeys_frame,
+                               text=jockey[1],
+                               command=self._show_jockey_info,
+                               arg=jockey[0]).pack(padx=10,pady=10)
+
+    def _fill_hippodromes_frame(self):
+        for hippodrome in self._db.get_all_hippodromes():
+            ArgumentSendButton(self._hippodromes_frame,
+                               text=hippodrome[1],
+                               command=self._show_hippodrome_info,
+                               arg=hippodrome[0]).pack(padx=10,pady=10)
+
+    def _fill_owners_frame(self):
+        for owner in self._db.get_all_owners():
+            ArgumentSendButton(self._owners_frame,
+                               text=owner[1],
+                               command=self._show_owner_info,
+                               arg=owner[0]).pack(padx=10,pady=10)
+
+    def _fill_horses_frame(self):
+        for horse in self._db.get_all_horses():
+            ArgumentSendButton(self._horses_frame,
+                               text=horse[1],
+                               command=self._show_horse_info,
+                               arg=horse[0]).pack(padx=10,pady=10)
+
     def _show_race_adding_window(self):
         window = ctk.CTkToplevel()
         window.title('Добавление заезда')
-        window.geometry('500x500')
+        window.geometry('500x300')
 
         hippodromes = {x[1]:x[0] for x in self._db.get_all_hippodromes()}
 
@@ -79,6 +101,7 @@ class App:
         date_entry.pack(padx=10, pady=10)
         hippodrome_choose.pack(padx=10, pady=10)
         ctk.CTkButton(window,
+                      text='Добавить',
                       command=lambda: self._add_race({
                                 'name': name_entry.get(),
                                 'date': date_entry.get(),
@@ -90,7 +113,7 @@ class App:
     def _show_race_info(self, race_id):
         window = ctk.CTkToplevel()
         window.title('Информация о заезде')
-        window.geometry('600x600')
+        window.geometry('400x500')
         window.grid_anchor('n')
 
         race = {
@@ -106,11 +129,189 @@ class App:
         LabelWithBg(window, text=race['info'][1],font=ctk.CTkFont(size=18)).grid(row=1, column=1, pady=10, padx=10, sticky='ew')
         ctk.CTkButton(window,
                       text=race['info'][2],
-                      font=ctk.CTkFont(size=12),
-                      command= lambda: ...).grid(row=2, column=1, pady=10, sticky='ew')
+                      font=ctk.CTkFont(size=18),
+                      command=lambda: ...).grid(row=2, column=1, pady=10, sticky='ew')
+        scrollable_frame = ctk.CTkScrollableFrame(window, height=300)
+        scrollable_frame.grid(row=3, column=0, rowspan=4, columnspan=2, sticky='ew')
+        ctk.CTkButton(window,
+                      text='Удалить заезд',
+                      fg_color='maroon',
+                      font=ctk.CTkFont(size=18),
+                      command=lambda: ...).grid(row=7, column=1)
+        ctk.CTkButton(window,
+                      text='Добавить результат',
+                      font=ctk.CTkFont(size=18),
+                      command=lambda: self._show_race_result_adding_window(race_id, window)).grid(row=7, column=0)
+        
+        for result in race['results']:
+            RaceResultFrame(scrollable_frame,
+                            result,
+                            self._show_jockey_info,
+                            self._show_horse_info,
+                            self._delete_race_result).pack(padx=10, pady=10)
+
+    def _show_jockey_info(self, jockey_id):
+        window = ctk.CTkToplevel()
+        window.title('Информация о жокее')
+        window.geometry('400x400')
+        window.grid_anchor('n')
+
+        jockey = {
+            'info': self._db.get_jockey(jockey_id)[0],    
+            'races': self._db.get_jockeys_races(jockey_id)
+        }    
+
+
+        LabelWithBg(window, text='Имя:',font=ctk.CTkFont(size=18)).grid(row=0, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Возраст:',font=ctk.CTkFont(size=18)).grid(row=1, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Адрес:',font=ctk.CTkFont(size=18)).grid(row=2, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Рейтинг:',font=ctk.CTkFont(size=18)).grid(row=3, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Заезды, в которых учавствовал:',font=ctk.CTkFont(size=18)).grid(row=4, column=0, pady=10, padx=10, sticky='ew', columnspan=2)
+
+        LabelWithBg(window, text=jockey['info'][0],font=ctk.CTkFont(size=18)).grid(row=0, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text=jockey['info'][1],font=ctk.CTkFont(size=18)).grid(row=1, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text=jockey['info'][2],font=ctk.CTkFont(size=18)).grid(row=2, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text=jockey['info'][3],font=ctk.CTkFont(size=18)).grid(row=3, column=1, pady=10, padx=10, sticky='ew')
+
         scrollable_frame = ctk.CTkScrollableFrame(window)
-        scrollable_frame.grid(row=3, column=0, rowspan=3, columnspan=3, sticky='ew')
-        #ctk.CTkLabel(window, text=race['info'][0]).pack(padx=10, pady=10)
+        scrollable_frame.grid(row=5, column=0, rowspan=3, columnspan=2, sticky='ew')
+        
+        for race in jockey['races']:
+            ArgumentSendButton(scrollable_frame,
+                               self._show_race_info,
+                               text=race[1],
+                               arg=race[0]).pack(padx=10, pady=10, fill='x')
+
+    def _show_hippodrome_info(self, hippodrome_id):
+        window = ctk.CTkToplevel()
+        window.title('Информация об ипподроме')
+        window.geometry('400x400')
+        window.grid_anchor('n')
+
+        hippodrome = {
+            'info': self._db.get_hippodrome(hippodrome_id)[0],    
+            'races': self._db.get_hippodrome_races(hippodrome_id)
+        }    
+
+
+        LabelWithBg(window, text='Название:',font=ctk.CTkFont(size=18)).grid(row=0, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Заезды на данном ипподроме:',font=ctk.CTkFont(size=18)).grid(row=1, column=0, pady=10, padx=10, sticky='ew', columnspan=2)
+
+        LabelWithBg(window, text=hippodrome['info'][0],font=ctk.CTkFont(size=18)).grid(row=0, column=1, pady=10, padx=10, sticky='ew')
+
+        scrollable_frame = ctk.CTkScrollableFrame(window)
+        scrollable_frame.grid(row=2, column=0, rowspan=3, columnspan=2, sticky='ew')
+        
+        for race in hippodrome['races']:
+            ArgumentSendButton(scrollable_frame,
+                               self._show_race_info,
+                               text=race[1],
+                               arg=race[0]).pack(padx=10, pady=10, fill='x')
+
+    def _show_owner_info(self, owner_id):
+        window = ctk.CTkToplevel()
+        window.title('Информация о владельце')
+        window.geometry('400x400')
+        window.grid_anchor('n')
+
+        owner = {
+            'info': self._db.get_owner(owner_id)[0],    
+            'horses': self._db.get_owner_horses(owner_id)
+        }    
+
+
+        LabelWithBg(window, text='Имя:',font=ctk.CTkFont(size=18)).grid(row=0, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Адрес:',font=ctk.CTkFont(size=18)).grid(row=1, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Телефон:',font=ctk.CTkFont(size=18)).grid(row=2, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Лошади:',font=ctk.CTkFont(size=18)).grid(row=3, column=0, pady=10, padx=10, sticky='ew', columnspan=2)
+
+        LabelWithBg(window, text=owner['info'][0],font=ctk.CTkFont(size=18)).grid(row=0, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text=owner['info'][1],font=ctk.CTkFont(size=18)).grid(row=1, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text=owner['info'][2],font=ctk.CTkFont(size=18)).grid(row=2, column=1, pady=10, padx=10, sticky='ew')
+
+        scrollable_frame = ctk.CTkScrollableFrame(window)
+        scrollable_frame.grid(row=4, column=0, rowspan=3, columnspan=2, sticky='ew')
+        
+        for horse in owner['horses']:
+            ArgumentSendButton(scrollable_frame,
+                               self._show_horse_info,
+                               text=horse[1],
+                               arg=horse[0]).pack(padx=10, pady=10, fill='x')
+
+    def _show_horse_info(self, horse_id):
+        window = ctk.CTkToplevel()
+        window.title('Информация о лошади')
+        window.geometry('400x400')
+        window.grid_anchor('n')
+
+        horse = {
+            'info': self._db.get_horse(horse_id)[0],    
+            'races': self._db.get_races_with_horse(horse_id)
+        }    
+
+
+        LabelWithBg(window, text='Имя:',font=ctk.CTkFont(size=18)).grid(row=0, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Возраст:',font=ctk.CTkFont(size=18)).grid(row=1, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Пол:',font=ctk.CTkFont(size=18)).grid(row=2, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Владелец:',font=ctk.CTkFont(size=18)).grid(row=3, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Заезды, в которых участвовала:',font=ctk.CTkFont(size=18)).grid(row=4, column=0, pady=10, padx=10, sticky='ew', columnspan=2)
+
+        LabelWithBg(window, text=horse['info'][0],font=ctk.CTkFont(size=18)).grid(row=0, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text=horse['info'][1],font=ctk.CTkFont(size=18)).grid(row=1, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text=horse['info'][2],font=ctk.CTkFont(size=18)).grid(row=2, column=1, pady=10, padx=10, sticky='ew')
+        ctk.CTkButton(window,
+                      text=horse['info'][3],
+                      font=ctk.CTkFont(size=18),
+                      command=lambda: self._show_owner_info(horse['info'][4])).grid(row=3, column=1, pady=10, padx=10, sticky='ew')
+
+        scrollable_frame = ctk.CTkScrollableFrame(window)
+        scrollable_frame.grid(row=5, column=0, rowspan=3, columnspan=2, sticky='ew')
+        
+        for race in horse['races']:
+            ArgumentSendButton(scrollable_frame,
+                               self._show_race_info,
+                               text=race[1],
+                               arg=race[0]).pack(padx=10, pady=10, fill='x')
+
+    def _show_race_result_adding_window(self, race_id, race_info_window):
+        window = ctk.CTkToplevel()
+        window.title('Добавление резульата')
+        window.geometry('500x300')
+
+        jokeys = [f'{x[0]} - {x[1]}' for x in self._db.get_jockeys_that_not_in_race(race_id)]
+        horses = [f'{x[0]} - {x[1]}' for x in self._db.get_horses_that_not_in_race(race_id)]
+
+        jockey_choose = ctk.CTkOptionMenu(window,
+                                  width=400,
+                                  values=jokeys)
+        horse_choose = ctk.CTkOptionMenu(window,
+                                  width=400,
+                                  values=horses)
+        place_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Место',
+                                  width=400,
+                                  corner_radius=0)
+        time_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Время',
+                                  width=400,
+                                  corner_radius=0)
+
+        jockey_choose.pack(padx=10, pady=10)
+        horse_choose.pack(padx=10, pady=10)
+        place_entry.pack(padx=10, pady=10)
+        time_entry.pack(padx=10, pady=10)
+        ctk.CTkButton(window,
+                      text='Добавить',
+                      command=lambda: self._add_race_result(race_result_data={
+                                'jockey_id': jockey_choose.get().split('-')[0],
+                                'horse_id': horse_choose.get().split('-')[0],
+                                'result_place': place_entry.get(),
+                                'result_time': time_entry.get()
+                                },
+                      creation_window=window,
+                      race_info_window=race_info_window,
+                      race_id=race_id))\
+                        .pack(padx=10, pady=10)
 
     def _add_race(self, race_data, window):
         try:
@@ -128,6 +329,30 @@ class App:
                           text=race_data['name'].strip(),
                           command=lambda: self._show_race_info(race_id)).pack(padx=10,pady=10)
 
+    def _add_race_result(self,
+                         race_id,
+                         race_result_data,
+                         creation_window,
+                         race_info_window):
+        try:
+            self._db.create_race_result(
+                race_result_data['result_place'],
+                race_result_data['result_time'],
+                race_id,
+                race_result_data['horse_id'],
+                race_result_data['jockey_id']
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            creation_window.destroy()
+            race_info_window.destroy()
+            self._show_race_info(race_id)
+
+    def _delete_race_result(self, race_result_id, race_result_frame):
+        self._db.delete_race_result(race_result_id)
+        race_result_frame.destroy()
+
     @staticmethod
     def show_message(message: str) -> None:
         """
@@ -139,11 +364,15 @@ class App:
         """
         window = ctk.CTkToplevel()
         window.title('Ошибка')
-        window.geometry('800x200')
+        window.geometry('600x200')
         ctk.CTkLabel(window, text=message).place(relx=0.5, rely=0.5, anchor='center')
 
     def run(self):
         self._fill_race_frame()
+        self._fill_jockeys_frame()
+        self._fill_hippodromes_frame()
+        self._fill_owners_frame()
+        self._fill_horses_frame()
         self._main_window.mainloop()
 
 
@@ -163,11 +392,42 @@ class ArgumentSendButton(ctk.CTkButton):
             if self._command is not None:
                 self._command(self._arg)
 
+
 class LabelWithBg(ctk.CTkLabel):
     """Класс текстовой метки с серым фоном."""
     def __init__(self, master, text: str, font: ctk.CTkFont = None) -> None:
         super().__init__(master,
                          text=text,
                          fg_color=("gray70", "gray30"),
-                         corner_radius=0,
+                         corner_radius=7,
                          font=font if font is not None else ctk.CTkFont(size=20))
+
+
+class RaceResultFrame(ctk.CTkFrame):
+    def __init__(self,
+                 master,
+                 race_result,
+                 show_jockey_method,
+                 show_horse_method,
+                 delete_race_result_method):
+        super().__init__(master, fg_color=("gray80", "gray40"))
+        LabelWithBg(self, text='Жокей:',font=ctk.CTkFont(size=18)).grid(row=0, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(self, text='Лошадь:',font=ctk.CTkFont(size=18)).grid(row=1, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(self, text='Место:',font=ctk.CTkFont(size=18)).grid(row=2, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(self, text='Времся:',font=ctk.CTkFont(size=18)).grid(row=3, column=0, pady=10, padx=10, sticky='ew')
+
+        ctk.CTkButton(self,
+                      text=race_result[1],
+                      font=ctk.CTkFont(size=18),
+                      command=lambda: show_jockey_method(race_result[5])).grid(row=0, column=1, pady=10, padx=10, sticky='ew')
+        ctk.CTkButton(self,
+                    text=race_result[2],
+                    font=ctk.CTkFont(size=18),
+                    command=lambda: show_horse_method(race_result[6])).grid(row=1, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(self, text=race_result[3],font=ctk.CTkFont(size=18)).grid(row=2, column=1, pady=10, padx=10, sticky='ew')
+        LabelWithBg(self, text=race_result[4],font=ctk.CTkFont(size=18)).grid(row=3, column=1, pady=10, padx=10, sticky='ew')
+        ctk.CTkButton(self,
+                      text='Удалить',
+                      font=ctk.CTkFont(size=18),
+                      fg_color='maroon',
+                      command=lambda: delete_race_result_method(race_result[0], self)).grid(row=4, column=0, pady=10, padx=10, sticky='ew', columnspan=2)

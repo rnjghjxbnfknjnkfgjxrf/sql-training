@@ -10,11 +10,13 @@ class DB:
         self._connection = sqlite3.connect('app.db')
         self._cursor = self._connection.cursor()
         self._cursor.executescript(INIT_DB_QUERY)
+        self._cursor.execute('PRAGMA foreign_keys = ON;')
         self._connection.commit()
 
     def close_connection(self) -> None:
         self._cursor.close()
         self._connection.close()
+        print('Connection closed')
 
     def _execute(self, query: str, *args) -> list:
         try:
@@ -51,12 +53,16 @@ class DB:
         name = name.strip().lower()
 
         if re.search('[0-9]', name) is not None:
-            raise HippodromeNameError()
+            raise HippodromeNameError('incorrect_name')
+        name = name.capitalize()
+        if any(name in x for x in self._execute('SELECT name FROM "Hippodrome";')):
+            raise HippodromeNameError('name_not_unique')
 
         self._execute("""
             INSERT INTO "Hippodrome" (name)
             VALUES (?);
-        """, name.capitalize())
+        """, name)
+        return self._cursor.lastrowid
 
     def create_owner(self, name: str, telephone: str, address: str):
         name = name.strip().lower()
@@ -71,6 +77,7 @@ class DB:
             INSERT INTO "Owner" (name, telephone, address)
             VALUES (?, ?, ?);
         """, name.capitalize(), telephone, address)
+        return self._cursor.lastrowid
 
     def create_horse(self,
                      name: str,
@@ -95,6 +102,7 @@ class DB:
             INSERT INTO "Horse" (name, age, gender, owner_id)
             VALUES (?, ?, ?, ?);
         """, name.capitalize(), age, gender, owner_id)
+        return self._cursor.lastrowid
 
     def create_jockey(self,
                      name: str,
@@ -117,6 +125,7 @@ class DB:
             INSERT INTO "Jockey" (name, age, address, rating)
             VALUES (?, ?, ?, ?);
         """, name.capitalize(), age, address, rating)
+        return self._cursor.lastrowid
 
     def create_race(self,
                     name: str,
@@ -239,8 +248,10 @@ class DB:
             SELECT
                 name, address, telephone
             FROM
-                "Owner";
-        """)
+                "Owner"
+            WHERE
+                id = ?;
+        """, owner_id)
 
     def get_owner_horses(self, owner_id: int) -> list[tuple]:
         return self._execute("""
@@ -415,8 +426,12 @@ class NameError(Exception):
         super().__init__('Неправильный формат имени:\n'+err_message)
 
 class HippodromeNameError(NameError):
-    def __init__(self) -> None:
-        super().__init__('Название ипподрома не должно содержать числа.')
+    def __init__(self, message_type: Union[Literal['incorrect_name'], Literal['name_not_unique']]) -> None:
+        if message_type == 'incorrect_name':
+            message = 'Название ипподрома не должно содержать числа.'
+        else:
+            message = 'Ипподром с таким названием уже существует'
+        super().__init__(message)
 
 class AgeError(Exception):
     def __init__(self, err_message: str = None) -> None:

@@ -12,6 +12,7 @@ class DB:
         self._cursor.executescript(INIT_DB_QUERY)
         self._cursor.execute('PRAGMA foreign_keys = ON;')
         self._connection.commit()
+        print('Connection created')
 
     def close_connection(self) -> None:
         self._cursor.close()
@@ -62,6 +63,7 @@ class DB:
             INSERT INTO "Hippodrome" (name)
             VALUES (?);
         """, name)
+
         return self._cursor.lastrowid
 
     def create_owner(self, name: str, telephone: str, address: str):
@@ -77,6 +79,7 @@ class DB:
             INSERT INTO "Owner" (name, telephone, address)
             VALUES (?, ?, ?);
         """, name.capitalize(), telephone, address)
+
         return self._cursor.lastrowid
 
     def create_horse(self,
@@ -88,7 +91,7 @@ class DB:
         gender = gender.strip().lower()
         try:
             age = int(age)
-        except TypeError:
+        except ValueError:
             raise AgeError()
 
         if not DB.validate_name(name):
@@ -102,6 +105,7 @@ class DB:
             INSERT INTO "Horse" (name, age, gender, owner_id)
             VALUES (?, ?, ?, ?);
         """, name.capitalize(), age, gender, owner_id)
+
         return self._cursor.lastrowid
 
     def create_jockey(self,
@@ -113,7 +117,7 @@ class DB:
         address = address.strip()
         try:
             age = int(age)
-        except TypeError:
+        except ValueError:
             raise JockeyAgeError()
 
         if not DB.validate_name(name):
@@ -125,6 +129,7 @@ class DB:
             INSERT INTO "Jockey" (name, age, address, rating)
             VALUES (?, ?, ?, ?);
         """, name.capitalize(), age, address, rating)
+
         return self._cursor.lastrowid
 
     def create_race(self,
@@ -143,6 +148,7 @@ class DB:
             INSERT INTO "Race" (name, date, hippodrome_id)
             VALUES (?, date(?), ?);
         """, name, date, hippodrome_id)
+
         return self._cursor.lastrowid
 
     def create_race_result(self,
@@ -210,6 +216,8 @@ class DB:
         """)
 
     def get_jockeys_that_not_in_race(self, race_id: int) -> list[tuple]:
+        if not isinstance(race_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 id, name
@@ -227,6 +235,8 @@ class DB:
         """, race_id)
 
     def get_horses_that_not_in_race(self, race_id: int) -> list[tuple]:
+        if not isinstance(race_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 id, name
@@ -244,6 +254,8 @@ class DB:
         """, race_id)
 
     def get_owner(self, owner_id) -> list[tuple]:
+        if not isinstance(owner_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 name, address, telephone
@@ -254,6 +266,8 @@ class DB:
         """, owner_id)
 
     def get_owner_horses(self, owner_id: int) -> list[tuple]:
+        if not isinstance(owner_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 id, name
@@ -264,6 +278,8 @@ class DB:
         """, owner_id)
 
     def get_horse(self, horse_id: int) -> list[tuple]:
+        if not isinstance(horse_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 h.name, h.age, h.gender, o.name, o.id
@@ -278,6 +294,8 @@ class DB:
         """, horse_id)
 
     def get_races_with_horse(self, horse_id: int) -> list[tuple]:
+        if not isinstance(horse_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 r.id, r.name
@@ -292,6 +310,8 @@ class DB:
         """, horse_id)
 
     def get_race(self, race_id: int) -> list[tuple]:
+        if not isinstance(race_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 r.name, r.date, h.name, h.id
@@ -306,6 +326,8 @@ class DB:
         """, race_id)
 
     def get_race_results(self, race_id: int) -> list[tuple]:
+        if not isinstance(race_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 rr.id, j.name, h.name, rr.result_place, rr.result_time,
@@ -325,6 +347,8 @@ class DB:
         """, race_id)
 
     def get_jockey(self, jockey_id: int) -> list[tuple]:
+        if not isinstance(jockey_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 name, age, address, rating
@@ -335,6 +359,8 @@ class DB:
         """, jockey_id)
 
     def get_jockeys_races(self, jockey_id: int) -> list[tuple]:
+        if not isinstance(jockey_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 r.id, r.name
@@ -349,6 +375,8 @@ class DB:
         """, jockey_id)
 
     def get_hippodrome_races(self, hippodrome_id: int) -> list[tuple]:
+        if not isinstance(hippodrome_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 id, name
@@ -359,6 +387,8 @@ class DB:
         """, hippodrome_id)
 
     def get_hippodrome(self, hippodrome_id: int) -> list[tuple]:
+        if not isinstance(hippodrome_id, int):
+            raise IDError()
         return self._execute("""
             SELECT
                 name
@@ -369,44 +399,58 @@ class DB:
         """, hippodrome_id)
 
     def delete_owner(self, owner_id: int):
+        if not isinstance(owner_id, int):
+            raise IDError()
         self._execute("""
             DELETE FROM "Owner"
             WHERE id = ?;
         """, owner_id)
 
     def delete_horse(self, horse_id: int):
+        if not isinstance(horse_id, int):
+            raise IDError()
         self._execute("""
             DELETE FROM "Horse"
             WHERE id = ?;
         """, horse_id)
 
-    def delete_jockey(self, jokey_id: int):
+    def delete_jockey(self, jockey_id: int):
+        if not isinstance(jockey_id, int):
+            raise IDError()
         self._execute("""
             DELETE FROM "Jockey"
             WHERE id = ?;
-        """, jokey_id)
+        """, jockey_id)
 
     def delete_race(self, race_id: int):
+        if not isinstance(race_id, int):
+            raise IDError()
         self._execute("""
             DELETE FROM "Race"
             WHERE id = ?;
         """, race_id)
 
     def delete_race_result(self, race_result_id: int):
+        if not isinstance(race_result_id, int):
+            raise IDError()
         self._execute("""
             DELETE FROM "Race_result"
             WHERE id = ?;
         """, race_result_id)
 
     def delete_hippodrome(self, hippodrome_id: int):
+        if not isinstance(hippodrome_id, int):
+            raise IDError()
         self._execute("""
             DELETE FROM "Hippodrome"
             WHERE id = ?;
         """, hippodrome_id)
 
+
 class DBExecuteQueryError(Exception):
     def __init__(self, err_message: str) -> None:
         super().__init__('Ошибка при выполнении запроса к БД:\n'+err_message)
+
 
 class PhoneNumberError(Exception):
     def __init__(self) -> None:
@@ -414,16 +458,19 @@ class PhoneNumberError(Exception):
                          'Номер должен состоять из 11 цифр, начинаться с 8 или с +7,\n ' +
                          'в качестве разделителей можно использовать пробел или знак тире.')
 
+
 class GenderError(Exception):
     def __init__(self) -> None:
         super().__init__('Неправильный пол:\n'+
                          'должен быть: мужской/женский')
+
 
 class NameError(Exception):
     def __init__(self, err_message: str = None) -> None:
         if err_message is None:
             err_message = 'Имя должно состоять только из букв русского алфавита.'
         super().__init__('Неправильный формат имени:\n'+err_message)
+
 
 class HippodromeNameError(NameError):
     def __init__(self, message_type: Union[Literal['incorrect_name'], Literal['name_not_unique']]) -> None:
@@ -433,20 +480,29 @@ class HippodromeNameError(NameError):
             message = 'Ипподром с таким названием уже существует'
         super().__init__(message)
 
+
 class AgeError(Exception):
     def __init__(self, err_message: str = None) -> None:
         if err_message is None:
             err_message = 'Возраст должен быть представлен как целое неотрицательное число.'
         super().__init__('Неправильный формат возраста:\n'+err_message)
 
+
 class JockeyAgeError(AgeError):
     def __init__(self) -> None:
         super().__init__('Возраст жокея должен быть представлен как целое число не меньшее 18.')
+
 
 class DateError(Exception):
     def __init__(self) -> None:
         super().__init__('Неправильный формат даты:\nДолжен быть YYYY-MM-DD.')
 
+
 class ResultAndPlaceError(Exception):
     def __init__(self) -> None:
         super().__init__('Занятое место и время прибытия к финишу должны быть целыми положительными числами.')
+
+
+class IDError(Exception):
+    def __init__(self) -> None:
+        super().__init__('ID должен быть целым числом (int)')

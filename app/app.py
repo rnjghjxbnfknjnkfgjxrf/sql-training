@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
-from tkinter import DISABLED
+from tkinter import DISABLED, NORMAL
 from app.db import DB
 
 ctk.set_appearance_mode('dark')
@@ -23,9 +23,10 @@ class App:
 
         self._races_frame = ctk.CTkScrollableFrame(races_tab, 780, 480)
         self._races_frame.pack()
-        ctk.CTkButton(races_tab,
+        self._race_adding_button = ctk.CTkButton(races_tab,
                       text='Добавить заезд',
-                      command=self._show_race_adding_window).pack(fill='x')
+                      command=self._show_race_adding_window)
+        self._race_adding_button.pack(fill='x')
 
         self._jockeys_frame = ctk.CTkScrollableFrame(jockeys_tab, 780, 480)
         self._jockeys_frame.pack()
@@ -47,9 +48,10 @@ class App:
 
         self._horses_frame = ctk.CTkScrollableFrame(horses_tab, 780, 480)
         self._horses_frame.pack()
-        ctk.CTkButton(horses_tab,
+        self._horse_adding_button = ctk.CTkButton(horses_tab,
                       text='Добавить лошадь',
-                      command=self._show_horse_adding_window).pack(fill='x')
+                      command=self._show_horse_adding_window)
+        self._horse_adding_button.pack(fill='x')
 
         self._tab_view.pack()
 
@@ -100,7 +102,7 @@ class App:
                                   width=400,
                                   corner_radius=0)
         date_entry = ctk.CTkEntry(window,
-                                  placeholder_text='Дата',
+                                  placeholder_text='Дата (YYYY-MM-DD)',
                                   width=400,
                                   corner_radius=0)
         hippodrome_choose = ctk.CTkOptionMenu(window,
@@ -272,10 +274,13 @@ class App:
                       fg_color='maroon',
                       font=ctk.CTkFont(size=18),
                       command=lambda: self._delete_race(race_id, window)).grid(row=7, column=1, sticky='ew')
-        ctk.CTkButton(window,
+        result_adding_button = ctk.CTkButton(window,
                       text='Добавить результат',
                       font=ctk.CTkFont(size=18),
-                      command=lambda: self._show_race_result_adding_window(race_id, window)).grid(row=7, column=0, sticky='ew')
+                      command=lambda: self._show_race_result_adding_window(race_id, window))
+        result_adding_button.grid(row=7, column=0, sticky='ew')
+        if not self._db.get_all_horses() or not self._db.get_all_jockeys():
+            result_adding_button.configure(state=DISABLED)
 
     def _show_jockey_info(self, jockey_id):
         window = ctk.CTkToplevel()
@@ -424,12 +429,17 @@ class App:
         window.title('Добавление резульата')
         window.geometry('500x300')
 
-        jokeys = [f'{x[0]} - {x[1]}' for x in self._db.get_jockeys_that_not_in_race(race_id)]
+        jockeys = [f'{x[0]} - {x[1]}' for x in self._db.get_jockeys_that_not_in_race(race_id)]
         horses = [f'{x[0]} - {x[1]}' for x in self._db.get_horses_that_not_in_race(race_id)]
+
+        if not jockeys or not horses:
+            window.destroy()
+            App.show_message('Для добавления результата заезда в БД должны присутствовать лошади и жокеи.')
+            return
 
         jockey_choose = ctk.CTkOptionMenu(window,
                                   width=400,
-                                  values=jokeys)
+                                  values=jockeys)
         horse_choose = ctk.CTkOptionMenu(window,
                                   width=400,
                                   values=horses)
@@ -512,6 +522,7 @@ class App:
                           text=owner_data['name'].strip().lower().capitalize(),
                           command=self._show_owner_info,
                           arg=owner_id).pack(padx=10, pady=10)
+            self._toggle_horse_adding_button_activity()
 
     def _add_horse(self,
                    horse_data,
@@ -546,6 +557,7 @@ class App:
                                text=name.strip().lower().capitalize(),
                                command=self._show_hippodrome_info,
                                arg=hippodrome_id).pack(padx=10, pady=10)
+            self._toggle_race_adding_button_activity()
 
     def _add_jockey(self, jockey_data, creation_window):
         try:
@@ -587,6 +599,7 @@ class App:
                 button.destroy()
                 break
         hippodrome_info_window.destroy()
+        self._toggle_race_adding_button_activity()
 
     def _delete_jockey(self, joceky_id, jockey_info_window):
         self._db.delete_jockey(joceky_id)
@@ -615,6 +628,19 @@ class App:
                 button.destroy()
                 break
         owner_info_window.destroy()
+        self._toggle_horse_adding_button_activity()
+
+    def _toggle_horse_adding_button_activity(self):
+        if not self._db.get_all_owners():
+            self._horse_adding_button.configure(state=DISABLED)
+        else:
+            self._horse_adding_button.configure(state=NORMAL)
+
+    def _toggle_race_adding_button_activity(self):
+        if not self._db.get_all_hippodromes():
+            self._race_adding_button.configure(state=DISABLED)
+        else:
+            self._race_adding_button.configure(state=NORMAL)
 
     @staticmethod
     def show_message(message: str) -> None:
@@ -626,7 +652,7 @@ class App:
         """
         window = ctk.CTkToplevel()
         window.title('Ошибка')
-        window.geometry('600x200')
+        window.geometry('650x200')
         ctk.CTkLabel(window, text=message).place(relx=0.5, rely=0.5, anchor='center')
 
     def run(self):
@@ -635,6 +661,10 @@ class App:
         self._fill_hippodromes_frame()
         self._fill_owners_frame()
         self._fill_horses_frame()
+
+        self._toggle_horse_adding_button_activity()
+        self._toggle_race_adding_button_activity()
+
         self._main_window.mainloop()
 
 

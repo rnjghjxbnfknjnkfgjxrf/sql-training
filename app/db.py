@@ -38,7 +38,7 @@ class DB:
     @staticmethod
     def validate_phone_number(phone_number: str) -> bool:
         return re.match(
-            '(\+7|8)[ -]?[0-9]{3}[ -]?[0-9]{3}[ -]?([0-9]{2}[ -]?[0-9]{2}|[0-9]{4})',
+            '^(\+7|8)[ -]?[0-9]{3}[ -]?[0-9]{3}[ -]?([0-9]{2}[ -]?[0-9]{2}|[0-9]{4})$',
             phone_number) is not None
 
     @staticmethod
@@ -131,7 +131,7 @@ class DB:
                     name: str,
                     date: str,
                     hippodrome_id: int):
-        name = name.strip()
+        name = name.strip().lower()
         date = date.strip()
 
         if not DB.validate_race_name(name):
@@ -411,7 +411,7 @@ class DBExecuteQueryError(Exception):
 class PhoneNumberError(Exception):
     def __init__(self) -> None:
         super().__init__('Неправильный формат номера телефона:\n' +
-                         'Номер должен состоять из 11 цифр, начинаться с 8 или с +7, ' +
+                         'Номер должен состоять из 11 цифр, начинаться с 8 или с +7,\n ' +
                          'в качестве разделителей можно использовать пробел или знак тире.')
 
 class GenderError(Exception):

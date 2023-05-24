@@ -274,7 +274,7 @@ class App:
 
         LabelWithBg(window, text='Название:',font=ctk.CTkFont(size=18)).grid(row=0, column=0, pady=10, padx=10, sticky='ew')
         LabelWithBg(window, text='Дата:',font=ctk.CTkFont(size=18)).grid(row=1, column=0, pady=10, padx=10, sticky='ew')
-        LabelWithBg(window, text='Иподром:',font=ctk.CTkFont(size=18)).grid(row=2, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(window, text='Ипподром:',font=ctk.CTkFont(size=18)).grid(row=2, column=0, pady=10, padx=10, sticky='ew')
         LabelWithBg(window, text='Результаты:',font=ctk.CTkFont(size=18)).grid(row=3, column=0, pady=10, padx=10, sticky='ew')
 
         LabelWithBg(window, text=race['info'][0],font=ctk.CTkFont(size=18)).grid(row=0, column=1, pady=10, padx=10, sticky='ew')
@@ -593,10 +593,11 @@ class App:
             App.show_message(str(err))
         else:
             creation_window.destroy()
-            ctk.CTkButton(
+            ArgumentSendButton(
                 self._horses_frame,
                 text=horse_data['name'].strip().lower().capitalize(),
-                command=lambda: self._show_horse_info(horse_id)
+                command=self._show_horse_info,
+                arg=horse_id
             ).pack(padx=10, pady=10)
             if owner_info_window is not None:
                 owner_info_window.destroy()

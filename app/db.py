@@ -158,12 +158,18 @@ class DB:
                            horse_id: int,
                            jockey_id: int):
         try:
-            result_place = int(result_place)
             result_time = int(result_time)
-            if result_time <= 0 or result_place <= 0:
+            if result_time <= 0:
                 raise ValueError()
         except ValueError:
-            raise ResultAndPlaceError()
+            raise RaceResultTimeError()
+
+        try:
+            result_place = int(result_place)
+            if result_place < 1 or result_place > 20:
+                raise ValueError()
+        except ValueError:
+            raise RaceResultPlaceError()
 
         self._execute("""
             INSERT INTO "Race_result" (result_place, result_time, race_id, horse_id, jockey_id)
@@ -498,9 +504,14 @@ class DateError(Exception):
         super().__init__('Неправильный формат даты:\nДолжен быть YYYY-MM-DD.')
 
 
-class ResultAndPlaceError(Exception):
+class RaceResultPlaceError(Exception):
     def __init__(self) -> None:
-        super().__init__('Занятое место и время прибытия к финишу должны быть целыми положительными числами.')
+        super().__init__('Занятое место должно быть целым числом в промежутке от 1 до 20.')
+
+
+class RaceResultTimeError(Exception):
+    def __init__(self) -> None:
+        super().__init__('Время прибытия к финишу должно быть целым положительным числом.')
 
 
 class IDError(Exception):

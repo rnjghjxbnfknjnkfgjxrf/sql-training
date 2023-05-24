@@ -495,7 +495,7 @@ class App:
                                          width=400,
                                          values=horses)
         place_entry = ctk.CTkEntry(window,
-                                   placeholder_text='Место',
+                                   placeholder_text='Место ([1,20])',
                                    width=400,
                                    corner_radius=0)
         time_entry = ctk.CTkEntry(window,

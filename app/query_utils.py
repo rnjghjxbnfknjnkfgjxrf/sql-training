@@ -77,5 +77,18 @@ INIT_DB_QUERY = """
                                 END)
                     WHERE
                         id = NEW.jockey_id;
-                END
+                END;
+
+                CREATE TRIGGER IF NOT EXISTS check_race_date
+                BEFORE INSERT ON "Race"
+                WHEN 
+                    EXISTS (
+                            SELECT id
+                            FROM "Race"
+                            WHERE
+                                date = NEW.date AND hippodrome_id = NEW.hippodrome_id
+                    )
+                BEGIN
+                    SELECT RAISE(ABORT, 'Нельзя создавать заезд с указанной датой на данном ипподроме, т.к. это время занято');
+                END;
                 """

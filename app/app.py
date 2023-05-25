@@ -1,7 +1,5 @@
 import customtkinter as ctk
-import tkinter as tk
-from tkinter import ttk
-from tkinter import DISABLED, NORMAL
+from tkinter import DISABLED, NORMAL, END
 from app.db import DB
 
 ctk.set_appearance_mode('dark')
@@ -11,7 +9,7 @@ class App:
     def __init__(self, db: DB)  -> None:
         self._db = db
         self._main_window = ctk.CTk()
-        self._main_window.geometry('800x570')
+        self._main_window.geometry('820x600')
         self._main_window.title('Заезды')
 
         self._tab_view = ctk.CTkTabview(self._main_window, 800, 500)
@@ -22,47 +20,354 @@ class App:
         horses_tab = self._tab_view.add('Лошади')
 
         self._races_frame = ctk.CTkScrollableFrame(races_tab, 780, 480)
-        self._races_frame.pack()
+        self._races_frame.grid(row=0, column=0, columnspan=5, sticky='ew')
         self._race_adding_button = ctk.CTkButton(races_tab,
                                                  text='Добавить заезд',
                                                  command=self._show_race_adding_window)
-        self._race_adding_button.pack(fill='x')
+        self._race_adding_button.grid(row=1, column=0, columnspan=5, sticky='ew')
+
+        self._races_filter_entry_from = ctk.CTkEntry(races_tab,
+                                                     corner_radius=0,
+                                                     width=100,
+                                                     placeholder_text='От (YYYY-MM-DD)')
+        self._races_filter_entry_to = ctk.CTkEntry(races_tab,
+                                                   corner_radius=0,
+                                                   width=100,
+                                                   placeholder_text='До (YYYY-MM-DD)')
+        self._races_filter_entry_from.grid(row=2, column=1, sticky='ew')
+        self._races_filter_entry_to.grid(row=2, column=2, sticky='ew')
+        self._races_filter_checkbox = ctk.CTkCheckBox(races_tab,
+                                                      text='Фильтровать по дате',
+                                                      command=self._toggle_races_filter_widgets)
+        self._races_filter_checkbox.grid(row=2, column=0, sticky='ew')
+        self._races_filter_reset_button = ctk.CTkButton(races_tab,
+                                                        text='Сбросить',
+                                                        fg_color='maroon',
+                                                        command=self._reset_races_filters)
+        self._races_filter_reset_button.grid(row=2, column=4, sticky='ew')
+        self._races_filter_apply_button = ctk.CTkButton(races_tab,
+                                                        text='Прменить',
+                                                        command=self._apply_races_filters)
+        self._races_filter_apply_button.grid(row=2, column=3, sticky='ew')
+
 
         self._jockeys_frame = ctk.CTkScrollableFrame(jockeys_tab, 780, 480)
-        self._jockeys_frame.pack()
+        self._jockeys_frame.grid(row=0, column=0, columnspan=5, sticky='ew')
         ctk.CTkButton(
             jockeys_tab,
             text='Добавить жокея',
             command=self._show_jockey_adding_window
-        ).pack(fill='x')
+        ).grid(row=1, column=0, columnspan=5, sticky='ew')
+
+        self._jockeys_filter_entry_from = ctk.CTkEntry(jockeys_tab,
+                                                     corner_radius=0,
+                                                     width=100,
+                                                     placeholder_text='От')
+        self._jockeys_filter_entry_to = ctk.CTkEntry(jockeys_tab,
+                                                   corner_radius=0,
+                                                   width=100,
+                                                   placeholder_text='До')
+        self._jockeys_filter_entry_from.grid(row=2, column=1, sticky='ew')
+        self._jockeys_filter_entry_to.grid(row=2, column=2, sticky='ew')
+        self._jockeys_filter_checkbox = ctk.CTkCheckBox(jockeys_tab,
+                                                      text='Фильтровать по рейтингу',
+                                                      command=self._toggle_jockeys_filter_widgets)
+        self._jockeys_filter_checkbox.grid(row=2, column=0, sticky='ew')
+        self._jockeys_filter_reset_button = ctk.CTkButton(jockeys_tab,
+                                                        text='Сбросить',
+                                                        fg_color='maroon',
+                                                        command=self._reset_jockeys_filters)
+        self._jockeys_filter_reset_button.grid(row=2, column=4, sticky='ew')
+        self._jockeys_filter_apply_button = ctk.CTkButton(jockeys_tab,
+                                                        text='Прменить',
+                                                        command=self._apply_jockeys_filters)
+        self._jockeys_filter_apply_button.grid(row=2, column=3, sticky='ew')
+
 
         self._hippodromes_frame = ctk.CTkScrollableFrame(hippodromes_tab, 780, 480)
-        self._hippodromes_frame.pack()
+        self._hippodromes_frame.grid(row=0, column=0, columnspan=5, sticky='ew')
         ctk.CTkButton(
             hippodromes_tab,
             text='Добавить ипподром',
             command=self._show_hippodrome_adding_window
-        ).pack(fill='x')
+        ).grid(row=1, column=0, columnspan=5, sticky='ew')
+
+        self._hippodromes_filter_entry_from = ctk.CTkEntry(hippodromes_tab,
+                                                           corner_radius=0,
+                                                           width=100,
+                                                           placeholder_text='От')
+        self._hippodromes_filter_entry_to = ctk.CTkEntry(hippodromes_tab,
+                                                         corner_radius=0,
+                                                         width=100,
+                                                         placeholder_text='До')
+        self._hippodromes_filter_entry_from.grid(row=2, column=1, sticky='ew')
+        self._hippodromes_filter_entry_to.grid(row=2, column=2, sticky='ew')
+        self._hippodromes_filter_checkbox = ctk.CTkCheckBox(hippodromes_tab,
+                                                            text='Фильтровать по количеству заездов',
+                                                            command=self._toggle_hippodromes_filter_widgets)
+        self._hippodromes_filter_checkbox.grid(row=2, column=0, sticky='ew')
+        self._hippodromes_filter_reset_button = ctk.CTkButton(hippodromes_tab,
+                                                              text='Сбросить',
+                                                              fg_color='maroon',
+                                                              command=self._reset_hippodromes_filters)
+        self._hippodromes_filter_reset_button.grid(row=2, column=4, sticky='ew')
+        self._hippodromes_filter_apply_button = ctk.CTkButton(hippodromes_tab,
+                                                              text='Прменить',
+                                                              command=self._apply_hippodromes_filters)
+        self._hippodromes_filter_apply_button.grid(row=2, column=3, sticky='ew')
+
 
         self._owners_frame = ctk.CTkScrollableFrame(owners_tab, 780, 480)
-        self._owners_frame.pack()
+        self._owners_frame.grid(row=0, column=0, columnspan=5, sticky='ew')
         ctk.CTkButton(
             owners_tab,
             text='Добавить владельца',
             command=self._show_owner_adding_window
-        ).pack(fill='x')
+        ).grid(row=1, column=0, columnspan=5, sticky='ew')
+
+        self._owners_filter_entry_from = ctk.CTkEntry(owners_tab,
+                                                      corner_radius=0,
+                                                      width=100,
+                                                      placeholder_text='От')
+        self._owners_filter_entry_to = ctk.CTkEntry(owners_tab,
+                                                    corner_radius=0,
+                                                    width=100,
+                                                    placeholder_text='До')
+        self._owners_filter_entry_from.grid(row=2, column=1, sticky='ew')
+        self._owners_filter_entry_to.grid(row=2, column=2, sticky='ew')
+        self._owners_filter_checkbox = ctk.CTkCheckBox(owners_tab,
+                                                       text='Фильтровать по количеству коней',
+                                                       command=self._toggle_owners_filter_widgets)
+        self._owners_filter_checkbox.grid(row=2, column=0, sticky='ew')
+        self._owners_filter_reset_button = ctk.CTkButton(owners_tab,
+                                                         text='Сбросить',
+                                                         fg_color='maroon',
+                                                         command=self._reset_owners_filters)
+        self._owners_filter_reset_button.grid(row=2, column=4, sticky='ew')
+        self._owners_filter_apply_button = ctk.CTkButton(owners_tab,
+                                                         text='Прменить',
+                                                         command=self._apply_owners_filters)
+        self._owners_filter_apply_button.grid(row=2, column=3, sticky='ew')
+
 
         self._horses_frame = ctk.CTkScrollableFrame(horses_tab, 780, 480)
-        self._horses_frame.pack()
+        self._horses_frame.grid(row=0, column=0, columnspan=5, sticky='ew')
         self._horse_adding_button = ctk.CTkButton(horses_tab,
                                                   text='Добавить лошадь',
                                                   command=self._show_horse_adding_window)
-        self._horse_adding_button.pack(fill='x')
+        self._horse_adding_button.grid(row=1, column=0, columnspan=5, sticky='ew')
+
+        self._horses_filter_entry_from = ctk.CTkEntry(horses_tab,
+                                                      corner_radius=0,
+                                                      width=100,
+                                                      placeholder_text='От')
+        self._horses_filter_entry_to = ctk.CTkEntry(horses_tab,
+                                                    corner_radius=0,
+                                                    width=100,
+                                                    placeholder_text='До')
+        self._horses_filter_entry_from.grid(row=2, column=1, sticky='ew')
+        self._horses_filter_entry_to.grid(row=2, column=2, sticky='ew')
+        self._horses_filter_checkbox = ctk.CTkCheckBox(horses_tab,
+                                                       text='Фильтровать по возрасту',
+                                                       command=self._toggle_horses_filter_widgets)
+        self._horses_filter_checkbox.grid(row=2, column=0, sticky='ew')
+        self._horses_filter_reset_button = ctk.CTkButton(horses_tab,
+                                                         text='Сбросить',
+                                                         fg_color='maroon',
+                                                         command=self._reset_horses_filters)
+        self._horses_filter_reset_button.grid(row=2, column=4, sticky='ew')
+        self._horses_filter_apply_button = ctk.CTkButton(horses_tab,
+                                                         text='Прменить',
+                                                         command=self._apply_horses_filters)
+        self._horses_filter_apply_button.grid(row=2, column=3, sticky='ew')
+
 
         self._tab_view.pack()
 
-    def _fill_race_frame(self):
-        for race in self._db.get_all_races():
+    @staticmethod
+    def _delete_children_widgets(parent_widget):
+        for child in parent_widget.winfo_children():
+            child.destroy()
+
+    def _toggle_races_filter_widgets(self):
+        if self._races_filter_checkbox.get():
+            self._races_filter_entry_from.configure(state=NORMAL)
+            self._races_filter_entry_to.configure(state=NORMAL)
+            self._races_filter_reset_button.configure(state=NORMAL)
+            self._races_filter_apply_button.configure(state=NORMAL)
+        else:
+            self._races_filter_entry_from.configure(state=DISABLED)
+            self._races_filter_entry_to.configure(state=DISABLED)
+            self._races_filter_reset_button.configure(state=DISABLED)
+            self._races_filter_apply_button.configure(state=DISABLED)
+
+    def _toggle_jockeys_filter_widgets(self):
+        if self._jockeys_filter_checkbox.get():
+            self._jockeys_filter_entry_from.configure(state=NORMAL)
+            self._jockeys_filter_entry_to.configure(state=NORMAL)
+            self._jockeys_filter_reset_button.configure(state=NORMAL)
+            self._jockeys_filter_apply_button.configure(state=NORMAL)
+        else:
+            self._jockeys_filter_entry_from.configure(state=DISABLED)
+            self._jockeys_filter_entry_to.configure(state=DISABLED)
+            self._jockeys_filter_reset_button.configure(state=DISABLED)
+            self._jockeys_filter_apply_button.configure(state=DISABLED)
+
+    def _toggle_hippodromes_filter_widgets(self):
+        if self._hippodromes_filter_checkbox.get():
+            self._hippodromes_filter_entry_from.configure(state=NORMAL)
+            self._hippodromes_filter_entry_to.configure(state=NORMAL)
+            self._hippodromes_filter_reset_button.configure(state=NORMAL)
+            self._hippodromes_filter_apply_button.configure(state=NORMAL)
+        else:
+            self._hippodromes_filter_entry_from.configure(state=DISABLED)
+            self._hippodromes_filter_entry_to.configure(state=DISABLED)
+            self._hippodromes_filter_reset_button.configure(state=DISABLED)
+            self._hippodromes_filter_apply_button.configure(state=DISABLED)
+
+    def _toggle_owners_filter_widgets(self):
+        if self._owners_filter_checkbox.get():
+            self._owners_filter_entry_from.configure(state=NORMAL)
+            self._owners_filter_entry_to.configure(state=NORMAL)
+            self._owners_filter_reset_button.configure(state=NORMAL)
+            self._owners_filter_apply_button.configure(state=NORMAL)
+        else:
+            self._owners_filter_entry_from.configure(state=DISABLED)
+            self._owners_filter_entry_to.configure(state=DISABLED)
+            self._owners_filter_reset_button.configure(state=DISABLED)
+            self._owners_filter_apply_button.configure(state=DISABLED)
+
+    def _toggle_horses_filter_widgets(self):
+        if self._horses_filter_checkbox.get():
+            self._horses_filter_entry_from.configure(state=NORMAL)
+            self._horses_filter_entry_to.configure(state=NORMAL)
+            self._horses_filter_reset_button.configure(state=NORMAL)
+            self._horses_filter_apply_button.configure(state=NORMAL)
+        else:
+            self._horses_filter_entry_from.configure(state=DISABLED)
+            self._horses_filter_entry_to.configure(state=DISABLED)
+            self._horses_filter_reset_button.configure(state=DISABLED)
+            self._horses_filter_apply_button.configure(state=DISABLED)
+
+    def _apply_races_filters(self):
+        try:
+            races = self._db.get_races_in_date_range(
+                self._races_filter_entry_from.get(),
+                self._races_filter_entry_to.get()
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            App._delete_children_widgets(self._races_frame)
+            self._fill_races_frame(races)
+
+    def _apply_jockeys_filters(self):
+        try:
+            jockeys = self._db.get_jockeys_with_rating_in_range(
+                self._jockeys_filter_entry_from.get(),
+                self._jockeys_filter_entry_to.get()
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            App._delete_children_widgets(self._jockeys_frame)
+            self._fill_jockeys_frame(jockeys)
+
+    def _apply_hippodromes_filters(self):
+        try:
+            hippodromes = self._db.get_hippodrome_with_races_in_range(
+                self._hippodromes_filter_entry_from.get(),
+                self._hippodromes_filter_entry_to.get()
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            App._delete_children_widgets(self._hippodromes_frame)
+            self._fill_hippodromes_frame(hippodromes)
+
+    def _apply_owners_filters(self):
+        try:
+            owners = self._db.get_owners_with_horses_count_in_range(
+                self._owners_filter_entry_from.get(),
+                self._owners_filter_entry_to.get()
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            App._delete_children_widgets(self._owners_frame)
+            self._fill_owners_frame(owners)
+
+    def _apply_horses_filters(self):
+        try:
+            horses = self._db.get_horses_with_age_in_range(
+                self._horses_filter_entry_from.get(),
+                self._horses_filter_entry_to.get()
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            App._delete_children_widgets(self._horses_frame)
+            self._fill_horses_frame(horses)
+
+    def _reset_races_filters(self):
+        self._races_filter_checkbox.deselect()
+        self._races_filter_entry_from.delete(0, END)
+        self._races_filter_entry_from.configure(placeholder_text='От (YYYY-MM-DD)')
+        self._races_filter_entry_to.delete(0, END)
+        self._races_filter_entry_to.configure(placeholder_text='До (YYYY-MM-DD)')
+        self._toggle_races_filter_widgets()
+
+        App._delete_children_widgets(self._races_frame)
+        self._fill_races_frame()
+
+    def _reset_jockeys_filters(self):
+        self._jockeys_filter_checkbox.deselect()
+        self._jockeys_filter_entry_from.delete(0, END)
+        self._jockeys_filter_entry_from.configure(placeholder_text='От')
+        self._jockeys_filter_entry_to.delete(0, END)
+        self._jockeys_filter_entry_to.configure(placeholder_text='До')
+        self._toggle_jockeys_filter_widgets()
+
+        App._delete_children_widgets(self._jockeys_frame)
+        self._fill_jockeys_frame()
+
+    def _reset_hippodromes_filters(self):
+        self._hippodromes_filter_checkbox.deselect()
+        self._hippodromes_filter_entry_from.delete(0, END)
+        self._hippodromes_filter_entry_from.configure(placeholder_text='От')
+        self._hippodromes_filter_entry_to.delete(0, END)
+        self._hippodromes_filter_entry_to.configure(placeholder_text='До')
+        self._toggle_hippodromes_filter_widgets()
+
+        App._delete_children_widgets(self._hippodromes_frame)
+        self._fill_hippodromes_frame()
+
+    def _reset_owners_filters(self):
+        self._owners_filter_checkbox.deselect()
+        self._owners_filter_entry_from.delete(0, END)
+        self._owners_filter_entry_from.configure(placeholder_text='От')
+        self._owners_filter_entry_to.delete(0, END)
+        self._owners_filter_entry_to.configure(placeholder_text='До')
+        self._toggle_owners_filter_widgets()
+
+        App._delete_children_widgets(self._owners_frame)
+        self._fill_owners_frame()
+
+    def _reset_horses_filters(self):
+        self._horses_filter_checkbox.deselect()
+        self._horses_filter_entry_from.delete(0, END)
+        self._horses_filter_entry_from.configure(placeholder_text='От')
+        self._horses_filter_entry_to.delete(0, END)
+        self._horses_filter_entry_to.configure(placeholder_text='До')
+        self._toggle_horses_filter_widgets()
+
+        App._delete_children_widgets(self._horses_frame)
+        self._fill_horses_frame()
+
+    def _fill_races_frame(self, races: list[tuple] = None):
+        if races is None:
+            races = self._db.get_all_races()
+        for race in races:
             ArgumentSendButton(
                 self._races_frame,
                 text=race[1],
@@ -70,8 +375,10 @@ class App:
                 arg=race[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_jockeys_frame(self):
-        for jockey in self._db.get_all_jockeys():
+    def _fill_jockeys_frame(self, jockeys: list[tuple] = None):
+        if jockeys is None:
+            jockeys = self._db.get_all_jockeys()
+        for jockey in jockeys:
             ArgumentSendButton(
                 self._jockeys_frame,
                 text=jockey[1],
@@ -79,8 +386,10 @@ class App:
                 arg=jockey[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_hippodromes_frame(self):
-        for hippodrome in self._db.get_all_hippodromes():
+    def _fill_hippodromes_frame(self, hippodromes: list[tuple] = None):
+        if hippodromes is None:
+            hippodromes = self._db.get_all_hippodromes()
+        for hippodrome in hippodromes:
             ArgumentSendButton(
                 self._hippodromes_frame,
                 text=hippodrome[1],
@@ -88,8 +397,10 @@ class App:
                 arg=hippodrome[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_owners_frame(self):
-        for owner in self._db.get_all_owners():
+    def _fill_owners_frame(self, owners: list[tuple] = None):
+        if owners is None:
+            owners = self._db.get_all_owners()
+        for owner in owners:
             ArgumentSendButton(
                 self._owners_frame,
                 text=owner[1],
@@ -97,8 +408,10 @@ class App:
                 arg=owner[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_horses_frame(self):
-        for horse in self._db.get_all_horses():
+    def _fill_horses_frame(self, horses: list[tuple] = None):
+        if horses is None:
+            horses = self._db.get_all_horses()
+        for horse in horses:
             ArgumentSendButton(
                 self._horses_frame,
                 text=horse[1],
@@ -718,7 +1031,7 @@ class App:
         ctk.CTkLabel(window, text=message).place(relx=0.5, rely=0.5, anchor='center')
 
     def run(self):
-        self._fill_race_frame()
+        self._fill_races_frame()
         self._fill_jockeys_frame()
         self._fill_hippodromes_frame()
         self._fill_owners_frame()
@@ -726,6 +1039,12 @@ class App:
 
         self._toggle_horse_adding_button_activity()
         self._toggle_race_adding_button_activity()
+
+        self._toggle_races_filter_widgets()
+        self._toggle_jockeys_filter_widgets()
+        self._toggle_hippodromes_filter_widgets()
+        self._toggle_owners_filter_widgets()
+        self._toggle_horses_filter_widgets()
 
         self._main_window.mainloop()
 

@@ -516,7 +516,7 @@ class App:
                     'name': name_entry.get(),
                     'age': age_entry.get(),
                     'gender': gender_entry.get(),
-                    'owner_id': owner_id if owner_id is not None else owner_choose.get().split('-')[0]
+                    'owner_id': owner_id if owner_id is not None else int(owner_choose.get().split('-')[0])
                     }, window, owner_info_window)
         ).pack(padx=10, pady=10)
 
@@ -824,8 +824,8 @@ class App:
             window,
             text='Добавить',
             command=lambda: self._add_race_result(race_result_data={
-                    'jockey_id': jockey_choose.get().split('-')[0],
-                    'horse_id': horse_choose.get().split('-')[0],
+                    'jockey_id': int(jockey_choose.get().split('-')[0]),
+                    'horse_id': int(horse_choose.get().split('-')[0]),
                     'result_place': place_entry.get(),
                     'result_time': time_entry.get()
                     },

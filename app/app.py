@@ -6,7 +6,14 @@ ctk.set_appearance_mode('dark')
 
 
 class App:
-    def __init__(self, db: DB)  -> None:
+    """Класс, описывающий работу приложения через графический интерфейс"""
+    def __init__(self, db: DB) -> None:
+        """
+        Инициализация экземпляра класса.
+
+        :param db: объект класса, реализующего работу с БД
+        :type db: DB
+        """
         self._db = db
         self._main_window = ctk.CTk()
         self._main_window.geometry('820x600')
@@ -185,11 +192,21 @@ class App:
         self._tab_view.pack()
 
     @staticmethod
-    def _delete_children_widgets(parent_widget):
+    def _delete_children_widgets(parent_widget: ctk.CTkBaseClass) -> None:
+        """
+        Удаляет все дочерние виджеты у родительскоего виджета.
+
+        :param parent_widget: родительский виджет
+        :type parent_widget: CTkBaseClass 
+        """
         for child in parent_widget.winfo_children():
             child.destroy()
 
-    def _toggle_races_filter_widgets(self):
+    def _toggle_races_filter_widgets(self) -> None:
+        """
+        Меняет активность виджетов, отвечающих 
+        за фильтрацию страницы с заездами.
+        """
         if self._races_filter_checkbox.get():
             self._races_filter_entry_from.configure(state=NORMAL)
             self._races_filter_entry_to.configure(state=NORMAL)
@@ -201,7 +218,11 @@ class App:
             self._races_filter_reset_button.configure(state=DISABLED)
             self._races_filter_apply_button.configure(state=DISABLED)
 
-    def _toggle_jockeys_filter_widgets(self):
+    def _toggle_jockeys_filter_widgets(self) -> None:
+        """
+        Меняет активность виджетов, отвечающих 
+        за фильтрацию страницы с жокеями.
+        """
         if self._jockeys_filter_checkbox.get():
             self._jockeys_filter_entry_from.configure(state=NORMAL)
             self._jockeys_filter_entry_to.configure(state=NORMAL)
@@ -213,7 +234,11 @@ class App:
             self._jockeys_filter_reset_button.configure(state=DISABLED)
             self._jockeys_filter_apply_button.configure(state=DISABLED)
 
-    def _toggle_hippodromes_filter_widgets(self):
+    def _toggle_hippodromes_filter_widgets(self) -> None:
+        """
+        Меняет активность виджетов, отвечающих 
+        за фильтрацию страницы с ипподромами.
+        """
         if self._hippodromes_filter_checkbox.get():
             self._hippodromes_filter_entry_from.configure(state=NORMAL)
             self._hippodromes_filter_entry_to.configure(state=NORMAL)
@@ -225,7 +250,11 @@ class App:
             self._hippodromes_filter_reset_button.configure(state=DISABLED)
             self._hippodromes_filter_apply_button.configure(state=DISABLED)
 
-    def _toggle_owners_filter_widgets(self):
+    def _toggle_owners_filter_widgets(self) -> None:
+        """
+        Меняет активность виджетов, отвечающих 
+        за фильтрацию страницы с владельцами.
+        """
         if self._owners_filter_checkbox.get():
             self._owners_filter_entry_from.configure(state=NORMAL)
             self._owners_filter_entry_to.configure(state=NORMAL)
@@ -237,7 +266,11 @@ class App:
             self._owners_filter_reset_button.configure(state=DISABLED)
             self._owners_filter_apply_button.configure(state=DISABLED)
 
-    def _toggle_horses_filter_widgets(self):
+    def _toggle_horses_filter_widgets(self) -> None:
+        """
+        Меняет активность виджетов, отвечающих 
+        за фильтрацию страницы с лошадьми.
+        """
         if self._horses_filter_checkbox.get():
             self._horses_filter_entry_from.configure(state=NORMAL)
             self._horses_filter_entry_to.configure(state=NORMAL)
@@ -249,7 +282,8 @@ class App:
             self._horses_filter_reset_button.configure(state=DISABLED)
             self._horses_filter_apply_button.configure(state=DISABLED)
 
-    def _apply_races_filters(self):
+    def _apply_races_filters(self) -> None:
+        """Применяет фильтр для заездов и отображает новую инофрмацию."""
         try:
             races = self._db.get_races_in_date_range(
                 self._races_filter_entry_from.get(),
@@ -261,7 +295,8 @@ class App:
             App._delete_children_widgets(self._races_frame)
             self._fill_races_frame(races)
 
-    def _apply_jockeys_filters(self):
+    def _apply_jockeys_filters(self) -> None:
+        """Применяет жокеев для заездов и отображает новую инофрмацию."""
         try:
             jockeys = self._db.get_jockeys_with_rating_in_range(
                 self._jockeys_filter_entry_from.get(),
@@ -273,7 +308,8 @@ class App:
             App._delete_children_widgets(self._jockeys_frame)
             self._fill_jockeys_frame(jockeys)
 
-    def _apply_hippodromes_filters(self):
+    def _apply_hippodromes_filters(self) -> None:
+        """Применяет фильтр для ипподромов и отображает новую информацию."""
         try:
             hippodromes = self._db.get_hippodrome_with_races_in_range(
                 self._hippodromes_filter_entry_from.get(),
@@ -285,7 +321,8 @@ class App:
             App._delete_children_widgets(self._hippodromes_frame)
             self._fill_hippodromes_frame(hippodromes)
 
-    def _apply_owners_filters(self):
+    def _apply_owners_filters(self) -> None:
+        """Применяет фильтр для владельцев и отображает новую информацию."""
         try:
             owners = self._db.get_owners_with_horses_count_in_range(
                 self._owners_filter_entry_from.get(),
@@ -297,7 +334,8 @@ class App:
             App._delete_children_widgets(self._owners_frame)
             self._fill_owners_frame(owners)
 
-    def _apply_horses_filters(self):
+    def _apply_horses_filters(self) -> None:
+        """Применяет фильтр для лошадей и отображает новую информацию."""
         try:
             horses = self._db.get_horses_with_age_in_range(
                 self._horses_filter_entry_from.get(),
@@ -309,7 +347,8 @@ class App:
             App._delete_children_widgets(self._horses_frame)
             self._fill_horses_frame(horses)
 
-    def _reset_races_filters(self):
+    def _reset_races_filters(self) -> None:
+        """Сбрасывает фильтрацию со страницы с заздами."""
         self._races_filter_checkbox.deselect()
         self._races_filter_entry_from.delete(0, END)
         self._races_filter_entry_from.configure(placeholder_text='От (YYYY-MM-DD)')
@@ -320,7 +359,8 @@ class App:
         App._delete_children_widgets(self._races_frame)
         self._fill_races_frame()
 
-    def _reset_jockeys_filters(self):
+    def _reset_jockeys_filters(self) -> None:
+        """Сбрасывает фильтрацию со страницы с жокеями."""
         self._jockeys_filter_checkbox.deselect()
         self._jockeys_filter_entry_from.delete(0, END)
         self._jockeys_filter_entry_from.configure(placeholder_text='От')
@@ -331,7 +371,8 @@ class App:
         App._delete_children_widgets(self._jockeys_frame)
         self._fill_jockeys_frame()
 
-    def _reset_hippodromes_filters(self):
+    def _reset_hippodromes_filters(self) -> None:
+        """Сбрасывает фильтрацию со страницы с ипподромами."""
         self._hippodromes_filter_checkbox.deselect()
         self._hippodromes_filter_entry_from.delete(0, END)
         self._hippodromes_filter_entry_from.configure(placeholder_text='От')
@@ -342,7 +383,8 @@ class App:
         App._delete_children_widgets(self._hippodromes_frame)
         self._fill_hippodromes_frame()
 
-    def _reset_owners_filters(self):
+    def _reset_owners_filters(self) -> None:
+        """Сбрасывает фильтрацию со страницы с владельцами."""
         self._owners_filter_checkbox.deselect()
         self._owners_filter_entry_from.delete(0, END)
         self._owners_filter_entry_from.configure(placeholder_text='От')
@@ -353,7 +395,8 @@ class App:
         App._delete_children_widgets(self._owners_frame)
         self._fill_owners_frame()
 
-    def _reset_horses_filters(self):
+    def _reset_horses_filters(self) -> None:
+        """Сбрасывает фильтрацию со страницы с лошадьми."""
         self._horses_filter_checkbox.deselect()
         self._horses_filter_entry_from.delete(0, END)
         self._horses_filter_entry_from.configure(placeholder_text='От')
@@ -364,7 +407,13 @@ class App:
         App._delete_children_widgets(self._horses_frame)
         self._fill_horses_frame()
 
-    def _fill_races_frame(self, races: list[tuple] = None):
+    def _fill_races_frame(self, races: list[tuple] = None) -> None:
+        """
+        Заполняет страницу с заездами полученными данными
+        или всеми записями из БД, если список не был получен.
+        :param races: список с данными о заездах (default None).
+        :type races: list[tuple]
+        """
         if races is None:
             races = self._db.get_all_races()
         for race in races:
@@ -375,7 +424,13 @@ class App:
                 arg=race[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_jockeys_frame(self, jockeys: list[tuple] = None):
+    def _fill_jockeys_frame(self, jockeys: list[tuple] = None) -> None:
+        """
+        Заполняет страницу с жокеями полученными данными
+        или всеми записями из БД, если список не был получен.
+        :param jockeys: список с данными о жокеях (default None).
+        :type jockeys: list[tuple]
+        """
         if jockeys is None:
             jockeys = self._db.get_all_jockeys()
         for jockey in jockeys:
@@ -386,7 +441,13 @@ class App:
                 arg=jockey[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_hippodromes_frame(self, hippodromes: list[tuple] = None):
+    def _fill_hippodromes_frame(self, hippodromes: list[tuple] = None) -> None:
+        """
+        Заполняет страницу с ипподромами полученными данными
+        или всеми записями из БД, если список не был получен.
+        :param hippodromes: список с данными о ипподромах (default None).
+        :type hippodromes: list[tuple]
+        """
         if hippodromes is None:
             hippodromes = self._db.get_all_hippodromes()
         for hippodrome in hippodromes:
@@ -397,7 +458,13 @@ class App:
                 arg=hippodrome[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_owners_frame(self, owners: list[tuple] = None):
+    def _fill_owners_frame(self, owners: list[tuple] = None) -> None:
+        """
+        Заполняет страницу с владельцами полученными данными
+        или всеми записями из БД, если список не был получен.
+        :param owners: список с данными о владельцах (default None).
+        :type owners: list[tuple]
+        """
         if owners is None:
             owners = self._db.get_all_owners()
         for owner in owners:
@@ -408,7 +475,13 @@ class App:
                 arg=owner[0]
             ).pack(padx=10,pady=10)
 
-    def _fill_horses_frame(self, horses: list[tuple] = None):
+    def _fill_horses_frame(self, horses: list[tuple] = None) -> None:
+        """
+        Заполняет страницу с лошадях полученными данными
+        или всеми записями из БД, если список не был получен.
+        :param horses: список с данными о конях (default None).
+        :type horses: list[tuple]
+        """
         if horses is None:
             horses = self._db.get_all_horses()
         for horse in horses:
@@ -419,7 +492,8 @@ class App:
                 arg=horse[0]
             ).pack(padx=10,pady=10)
 
-    def _show_race_adding_window(self):
+    def _show_race_adding_window(self) -> None:
+        """Отрисовывает окно добавления нового заезда"""
         window = ctk.CTkToplevel()
         window.title('Добавление заезда')
         window.geometry('500x300')
@@ -451,7 +525,65 @@ class App:
                     }, window)
         ).pack(padx=10, pady=10)
 
-    def _show_owner_adding_window(self):
+    def _show_race_result_adding_window(self,
+                                        race_id: int,
+                                        race_info_window: ctk.CTkToplevel) -> None:
+        """
+        Отрисовывает окно добавления нового результата заезда.
+
+        :param race_id: id заезда для короторого добавляется результат.
+        :type race_id: int
+        :param race_info_window: окно с информацией о заезде, данные в котором
+                                 нужно будет обновить после добавления результата.
+        :type race_info_window: CTkToplevel
+        """
+        window = ctk.CTkToplevel()
+        window.title('Добавление резульата')
+        window.geometry('500x300')
+
+        jockeys = [f'{x[0]} - {x[1]}' for x in self._db.get_jockeys_that_not_in_race(race_id)]
+        horses = [f'{x[0]} - {x[1]}' for x in self._db.get_horses_that_not_in_race(race_id)]
+
+        if not jockeys or not horses:
+            window.destroy()
+            App.show_message('Для добавления результата заезда в БД должны присутствовать лошади и жокеи.')
+            return
+
+        jockey_choose = ctk.CTkOptionMenu(window,
+                                          width=400,
+                                          values=jockeys)
+        horse_choose = ctk.CTkOptionMenu(window,
+                                         width=400,
+                                         values=horses)
+        place_entry = ctk.CTkEntry(window,
+                                   placeholder_text='Место ([1,20])',
+                                   width=400,
+                                   corner_radius=0)
+        time_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Время (в секундах)',
+                                  width=400,
+                                  corner_radius=0)
+
+        jockey_choose.pack(padx=10, pady=10)
+        horse_choose.pack(padx=10, pady=10)
+        place_entry.pack(padx=10, pady=10)
+        time_entry.pack(padx=10, pady=10)
+        ctk.CTkButton(
+            window,
+            text='Добавить',
+            command=lambda: self._add_race_result(race_result_data={
+                    'jockey_id': int(jockey_choose.get().split('-')[0]),
+                    'horse_id': int(horse_choose.get().split('-')[0]),
+                    'result_place': place_entry.get(),
+                    'result_time': time_entry.get()
+                    },
+            creation_window=window,
+            race_info_window=race_info_window,
+            race_id=race_id)
+        ).pack(padx=10, pady=10)
+
+    def _show_owner_adding_window(self) -> None:
+        """Отрисовывает окно добавления нового владельца"""
         window = ctk.CTkToplevel()
         window.title('Добавление владельца')
         window.geometry('500x300')
@@ -482,7 +614,22 @@ class App:
                     }, window)
         ).pack(padx=10, pady=10)
 
-    def _show_horse_adding_window(self, owner_id = None, owner_info_window = None):
+    def _show_horse_adding_window(self,
+                                  owner_id: int = None,
+                                  owner_info_window: ctk.CTkToplevel = None) -> None:
+        """
+        Отрисовывает окно добавления новой лошади.
+
+        :param owner_id: id владельца, к которому добавлется лошадь
+                         (если не указан, то будет отрисован виджет
+                          с выбором владельца) (default None)
+        :type onwer_id: int
+        :param owner_info_window: окно, данные в котором нужно будет обновить
+                                  после добавления новой лошади, если
+                                  создание вызвано из окна с информацией
+                                  о владельце (default None)
+        :type owner_info_window: CTkToplevel
+        """
         window = ctk.CTkToplevel()
         window.title('Добавление лошади')
         window.geometry('500x300')
@@ -520,7 +667,8 @@ class App:
                     }, window, owner_info_window)
         ).pack(padx=10, pady=10)
 
-    def _show_jockey_adding_window(self):
+    def _show_jockey_adding_window(self) -> None:
+        """Отрисовывает окно добавления нового жокея"""
         window = ctk.CTkToplevel()
         window.title('Добавление жокея')
         window.geometry('500x300')
@@ -558,7 +706,8 @@ class App:
                     }, window)
         ).pack(padx=10, pady=10)
 
-    def _show_hippodrome_adding_window(self):
+    def _show_hippodrome_adding_window(self) -> None:
+        """Отрисовывает окно добавления нового ипподрома"""
         window = ctk.CTkToplevel()
         window.title('Добавление ипподрома')
         window.geometry('500x200')
@@ -574,7 +723,13 @@ class App:
             command=lambda: self._add_hippodrome(name_entry.get(), window)
         ).pack(padx=10, pady=10)
 
-    def _show_race_info(self, race_id):
+    def _show_race_info(self, race_id: int) -> None:
+        """
+        Отрисовывает окно с информацией о выбранном заезде.
+
+        :param race_id: id выбранного заезда.
+        :type race_id: int
+        """
         window = ctk.CTkToplevel()
         window.title('Информация о заезде')
         window.geometry('400x500')
@@ -625,7 +780,13 @@ class App:
         if not self._db.get_all_horses() or not self._db.get_all_jockeys():
             result_adding_button.configure(state=DISABLED)
 
-    def _show_jockey_info(self, jockey_id):
+    def _show_jockey_info(self, jockey_id: int) -> None:
+        """
+        Отрисовывает окно с информацией о выбранном жокее.
+
+        :param jockey_id: id выбранного жокея.
+        :param jockey_id: int
+        """
         window = ctk.CTkToplevel()
         window.title('Информация о жокее')
         window.geometry('400x500')
@@ -665,7 +826,13 @@ class App:
             command=lambda: self._delete_jockey(jockey_id, window)
         ).grid(row=8, column=0, columnspan=2, sticky='ew')
 
-    def _show_hippodrome_info(self, hippodrome_id):
+    def _show_hippodrome_info(self, hippodrome_id: int) -> None:
+        """
+        Отрисовывает окно с информацией о выбранном ипподроме.
+
+        :param hippodrome_id: id выбранного ипподрома.
+        :param hippodrome_id: int
+        """
         window = ctk.CTkToplevel()
         window.title('Информация об ипподроме')
         window.geometry('400x350')
@@ -698,7 +865,13 @@ class App:
             command=lambda: self._delete_hippodrome(hippodrome_id, window)
         ).grid(row=5, column=0, columnspan=2, sticky='ew')
 
-    def _show_owner_info(self, owner_id):
+    def _show_owner_info(self, owner_id: int) -> None:
+        """
+        Отрисовывает окно с информацией о выбранном владельце.
+
+        :param owner_id: id выбранного владельца.
+        :param owner_id: int
+        """
         window = ctk.CTkToplevel()
         window.title('Информация о владельце')
         window.geometry('400x500')
@@ -743,7 +916,13 @@ class App:
                 arg=horse[0]
             ).pack(padx=10, pady=10, fill='x')
 
-    def _show_horse_info(self, horse_id):
+    def _show_horse_info(self, horse_id: int) -> None:
+        """
+        Отрисовывает окно с информацией о выбранной лошади.
+
+        :param horse_id: id выбранного коня.
+        :param horse_id: int
+        """
         window = ctk.CTkToplevel()
         window.title('Информация о лошади')
         window.geometry('400x500')
@@ -788,53 +967,17 @@ class App:
             command=lambda: self._delete_horse(horse_id, window)
         ).grid(row=8, column=0, columnspan=2, sticky='ew')
 
-    def _show_race_result_adding_window(self, race_id, race_info_window):
-        window = ctk.CTkToplevel()
-        window.title('Добавление резульата')
-        window.geometry('500x300')
+    def _add_race(self,
+                  race_data: dict,
+                  creation_window: ctk.CTkToplevel) -> None:
+        """
+        Добавление нового заезда в БД и обновление страницы с заездами.
 
-        jockeys = [f'{x[0]} - {x[1]}' for x in self._db.get_jockeys_that_not_in_race(race_id)]
-        horses = [f'{x[0]} - {x[1]}' for x in self._db.get_horses_that_not_in_race(race_id)]
-
-        if not jockeys or not horses:
-            window.destroy()
-            App.show_message('Для добавления результата заезда в БД должны присутствовать лошади и жокеи.')
-            return
-
-        jockey_choose = ctk.CTkOptionMenu(window,
-                                          width=400,
-                                          values=jockeys)
-        horse_choose = ctk.CTkOptionMenu(window,
-                                         width=400,
-                                         values=horses)
-        place_entry = ctk.CTkEntry(window,
-                                   placeholder_text='Место ([1,20])',
-                                   width=400,
-                                   corner_radius=0)
-        time_entry = ctk.CTkEntry(window,
-                                  placeholder_text='Время (в секундах)',
-                                  width=400,
-                                  corner_radius=0)
-
-        jockey_choose.pack(padx=10, pady=10)
-        horse_choose.pack(padx=10, pady=10)
-        place_entry.pack(padx=10, pady=10)
-        time_entry.pack(padx=10, pady=10)
-        ctk.CTkButton(
-            window,
-            text='Добавить',
-            command=lambda: self._add_race_result(race_result_data={
-                    'jockey_id': int(jockey_choose.get().split('-')[0]),
-                    'horse_id': int(horse_choose.get().split('-')[0]),
-                    'result_place': place_entry.get(),
-                    'result_time': time_entry.get()
-                    },
-            creation_window=window,
-            race_info_window=race_info_window,
-            race_id=race_id)
-        ).pack(padx=10, pady=10)
-
-    def _add_race(self, race_data, creation_window):
+        :param race_data: данные о новоном заезде.
+        :type race_data: dict
+        :param creation_window: окно создания, которое нужно закрыть.
+        :type creation_window: CTkToplevel
+        """
         try:
             race_id = self._db.create_race(
                 race_data['name'],
@@ -851,10 +994,24 @@ class App:
                                arg=race_id).pack(padx=10,pady=10)
 
     def _add_race_result(self,
-                         race_id,
-                         race_result_data,
-                         creation_window,
-                         race_info_window):
+                         race_id: int,
+                         race_result_data: dict,
+                         creation_window: ctk.CTkToplevel,
+                         race_info_window: ctk.CTkToplevel) -> None:
+        """
+        Добавление нового результата заезда в БД и обновление окна
+        с информацией о заезде.
+
+        :param race_id: id заезда, для которого добавляется результат.
+        :type race_id: int
+        :param race_result_data: данные о новоном результате заезда.
+        :type race_result_data: dict
+        :param creation_window: окно создания, которое нужно закрыть.
+        :type creation_window: CTkToplevel
+        :param race_info_window: окно с информацией о заезде, данные
+                                 в котором нужно обновить.
+        :type race_info_window: CTkToplevel
+        """
         try:
             self._db.create_race_result(
                 race_result_data['result_place'],
@@ -871,8 +1028,16 @@ class App:
             self._show_race_info(race_id)
 
     def _add_owner(self,
-                   owner_data,
-                   creation_window):
+                   owner_data: dict,
+                   creation_window: ctk.CTkToplevel) -> None:
+        """
+        Добавление нового владельца в БД и обновление страницы с владельцами.
+
+        :param owner_data: данные о новоном владельце.
+        :type owner_data: dict
+        :param creation_window: окно создания, которое нужно закрыть.
+        :type creation_window: CTkToplevel
+        """
         try:
             owner_id = self._db.create_owner(
                 owner_data['name'],
@@ -892,9 +1057,21 @@ class App:
             self._toggle_horse_adding_button_activity()
 
     def _add_horse(self,
-                   horse_data,
-                   creation_window,
-                   owner_info_window = None):
+                   horse_data: dict,
+                   creation_window: ctk.CTkToplevel,
+                   owner_info_window: ctk.CTkToplevel = None) -> None:
+        """
+        Добавление нового коня в БД, обновление страницы с лошадьми
+        и обновление окна владельца, если добавление лошади
+        вызвано через него.
+
+        :param horse_data: данные о новоной лошади.
+        :type horse_data: dict
+        :param creation_window: окно создания, которое нужно закрыть.
+        :type creation_window: CTkToplevel
+        :param owner_info_window: окно с информацией о владельце,
+                                  данные в котором нужно обновить.
+        """
         try:
             horse_id = self._db.create_horse(
                 horse_data['name'],
@@ -916,7 +1093,17 @@ class App:
                 owner_info_window.destroy()
                 self._show_owner_info(horse_data['owner_id'])
 
-    def _add_hippodrome(self, name, creation_window):
+    def _add_hippodrome(self,
+                        name: str,
+                        creation_window: ctk.CTkToplevel) -> None:
+        """
+        Добавление нового ипподрома в БД и обновление страницы с ипподромами.
+
+        :param name: название нового ипподрома.
+        :type race_data: str
+        :param creation_window: окно создания, которое нужно закрыть.
+        :type creation_window: CTkToplevel
+        """
         try:
             hippodrome_id = self._db.create_hippodrome(name)
         except Exception as err:
@@ -931,7 +1118,17 @@ class App:
             ).pack(padx=10, pady=10)
             self._toggle_race_adding_button_activity()
 
-    def _add_jockey(self, jockey_data, creation_window):
+    def _add_jockey(self,
+                    jockey_data: dict,
+                    creation_window: ctk.CTkToplevel) -> None:
+        """
+        Добавление нового жокея в БД и обновление страницы с жокеями.
+
+        :param jockey_data: данные о новоном жокее.
+        :type jockey_data: dict
+        :param creation_window: окно создания, которое нужно закрыть.
+        :type creation_window: CTkToplevel
+        """
         try:
             jockey_id = self._db.create_jockey(
                 jockey_data['name'],
@@ -950,11 +1147,33 @@ class App:
                 arg=jockey_id
             ).pack(padx=10, pady=10)
 
-    def _delete_race_result(self, race_result_id, race_result_frame):
+    def _delete_race_result(self,
+                            race_result_id: int,
+                            race_result_frame: ctk.CTkFrame) -> None:
+        """
+        Удаление результата заезда из БД и фрейма с его данными
+        из окна с информацией о заезде.
+
+        :param race_result_id: id результата заезда
+        :type race_result_id: int
+        :param race_result_frame: фрейм результата заезда
+        :type race_result_frame: RaceResultFrame
+        """
         self._db.delete_race_result(race_result_id)
         race_result_frame.destroy()
 
-    def _delete_race(self, race_id, race_info_window):
+    def _delete_race(self,
+                     race_id: int,
+                     race_info_window: ctk.CTkToplevel) -> None:
+        """
+        Удаление заезда из БД и обновление страницы
+        с заездами.
+
+        :param race_id: id заезда
+        :type race_id: int
+        :param race_info_window: окно с информацией о заезде, которое нужно закрыть
+        :type race_info_window: CTkToplevel
+        """
         self._db.delete_race(race_id)
         for button in self._races_frame.winfo_children():
             if button._arg == race_id:
@@ -963,7 +1182,18 @@ class App:
 
         race_info_window.destroy()
 
-    def _delete_hippodrome(self, hippodrome_id, hippodrome_info_window):
+    def _delete_hippodrome(self,
+                           hippodrome_id: int,
+                           hippodrome_info_window: ctk.CTkToplevel) -> None:
+        """
+        Удаление ипподрома из БД и обновление страницы
+        с ипподромами и страницы с заездами.
+
+        :param hippodrome_id: id ипподрома
+        :type hippodrome_id: int
+        :param hippodrome_info_window: окно с информацией об ипподроме, которое нужно закрыть
+        :type hippodrome_info_window: CTkToplevel
+        """
         hippodrome_races = self._db.get_hippodrome_races(hippodrome_id)
         for button in self._races_frame.winfo_children():
             if any(button._arg in x for x in hippodrome_races):
@@ -978,7 +1208,17 @@ class App:
         hippodrome_info_window.destroy()
         self._toggle_race_adding_button_activity()
 
-    def _delete_jockey(self, joceky_id, jockey_info_window):
+    def _delete_jockey(self,
+                       joceky_id: int,
+                       jockey_info_window: ctk.CTkToplevel) -> None:
+        """
+        Удаление жокея из БД и обновление страницы жокеями.
+
+        :param joceky_id: id жокея
+        :type joceky_id: int
+        :param jockey_info_window: окно с информацией о жокее, которое нужно закрыть
+        :type jockey_info_window: CTkToplevel
+        """
         self._db.delete_jockey(joceky_id)
         for button in self._jockeys_frame.winfo_children():
             if button._arg == joceky_id:
@@ -987,7 +1227,17 @@ class App:
 
         jockey_info_window.destroy()
 
-    def _delete_horse(self, horse_id, horse_info_window):
+    def _delete_horse(self,
+                      horse_id: int,
+                      horse_info_window: ctk.CTkToplevel) -> None:
+        """
+        Удаление лошади из БД и обновление страницы с лошадьми.
+
+        :param horse_id: id коня
+        :type horse_id: int
+        :param horse_info_window: окно с информацией о лошади, которое нужно закрыть
+        :type horse_info_window: CTkToplevel
+        """
         self._db.delete_horse(horse_id)
         for button in self._horses_frame.winfo_children():
             if button._arg == horse_id:
@@ -996,7 +1246,18 @@ class App:
 
         horse_info_window.destroy()
 
-    def _delete_owner(self, owner_id, owner_info_window):
+    def _delete_owner(self,
+                      owner_id: int,
+                      owner_info_window: ctk.CTkToplevel) -> None:
+        """
+        Удаление владельца из БД и обновление страницы
+        с владельцами и страницы с лошадьми.
+
+        :param owner_id: id владельца
+        :type owner_id: int
+        :param owner_info_window: окно с информацией об ипподроме, которое нужно закрыть
+        :type owner_info_window: CTkToplevel
+        """
         owner_horses = self._db.get_owner_horses(owner_id)
         for button in self._horses_frame.winfo_children():
             if any(button._arg in x for x in owner_horses):
@@ -1011,13 +1272,15 @@ class App:
         owner_info_window.destroy()
         self._toggle_horse_adding_button_activity()
 
-    def _toggle_horse_adding_button_activity(self):
+    def _toggle_horse_adding_button_activity(self) -> None:
+        """Меняет активность кнопки добавления лошади"""
         if not self._db.get_all_owners():
             self._horse_adding_button.configure(state=DISABLED)
         else:
             self._horse_adding_button.configure(state=NORMAL)
 
-    def _toggle_race_adding_button_activity(self):
+    def _toggle_race_adding_button_activity(self) -> None:
+        """Меняет активность кнопки добавления заезда"""
         if not self._db.get_all_hippodromes():
             self._race_adding_button.configure(state=DISABLED)
         else:
@@ -1025,12 +1288,19 @@ class App:
 
     @staticmethod
     def show_message(message: str) -> None:
+        """
+        Отрисовывает окно с указаным сообщением.
+
+        :param message: сообщение для отображения
+        :type message: str
+        """
         window = ctk.CTkToplevel()
         window.title('Ошибка')
         window.geometry('650x200')
         ctk.CTkLabel(window, text=message).place(relx=0.5, rely=0.5, anchor='center')
 
-    def run(self):
+    def run(self) -> None:
+        """Гланвый метод, запускающий программу"""
         self._fill_races_frame()
         self._fill_jockeys_frame()
         self._fill_hippodromes_frame()
@@ -1050,6 +1320,11 @@ class App:
 
 
 class ArgumentSendButton(ctk.CTkButton):
+    """
+    Класс кнопки, которая при вызове назначенной на
+    нее функции, передает в эту функцию указанный при 
+    инициализации аргумент.
+    """
     def __init__(self, master, command, text, arg):
         super().__init__(master,
                        text=text,
@@ -1077,6 +1352,7 @@ class LabelWithBg(ctk.CTkLabel):
 
 
 class RaceResultFrame(ctk.CTkFrame):
+    """Класс фрейма с информацией о результате заезда"""
     def __init__(self,
                  master,
                  race_result,

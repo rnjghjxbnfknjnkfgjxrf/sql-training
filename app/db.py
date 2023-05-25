@@ -6,8 +6,21 @@ from datetime import datetime
 
 
 class DB:
-    def __init__(self):
-        self._connection = sqlite3.connect('app.db')
+    """Класс, реализующий взаимодействие с БД"""
+    __slots__ = ('_connection', '_cursor')
+
+    def __init__(self, db_path: str = None):
+        """
+        Инициализация экземпляра класса:
+        создание соединенияи выполнения
+        запроса с инициализацией БД.
+
+        :param db_path: путь к файлу с базой данных
+                        (default 'app.db')
+        """
+        if db_path is None:
+            db_path = 'app.db'
+        self._connection = sqlite3.connect(db_path)
         self._cursor = self._connection.cursor()
         self._cursor.executescript(INIT_DB_QUERY)
         self._cursor.execute('PRAGMA foreign_keys = ON;')
@@ -15,11 +28,21 @@ class DB:
         print('Connection created')
 
     def close_connection(self) -> None:
+        """Закрывает соединение с БД."""
         self._cursor.close()
         self._connection.close()
         print('Connection closed')
 
-    def _execute(self, query: str, *args) -> list:
+    def _execute(self, query: str, *args) -> list[tuple]:
+        """
+        Выполнение заданного SQL запроса.
+
+        :param query: запрос
+        :type query: str
+
+        :return: данные, полученные в результате
+                 выполнения запроса.
+        """
         try:
             res = self._cursor.execute(query, args)
             self._connection.commit()
@@ -30,27 +53,43 @@ class DB:
 
     @staticmethod
     def validate_name(name: str) -> bool:
+        """Валидация имени."""
         return re.match('^([а-я]+)$', name) is not None
 
     @staticmethod
     def validate_race_name(race_name: str) -> bool:
+        """Валидация названия заезда."""
         return re.match('^([а-я][a-я ]*)$', race_name) is not None
 
     @staticmethod
     def validate_phone_number(phone_number: str) -> bool:
+        """Валидация номера телефона."""
         return re.match(
             '^(\+7|8)[ -]?[0-9]{3}[ -]?[0-9]{3}[ -]?([0-9]{2}[ -]?[0-9]{2}|[0-9]{4})$',
             phone_number) is not None
 
     @staticmethod
     def validate_date(date: str) -> bool:
+        """Валидация даты."""
         try:
             datetime.strptime(date, '%Y-%m-%d')
             return True
         except ValueError:
             return False
 
-    def create_hippodrome(self, name: str):
+    def create_hippodrome(self, name: str) -> int:
+        """
+        Создание нового ипподрома.
+
+        :param name: название
+        :type name: str
+
+        :raises HippodromeNameError: если имя не прошло
+                                     валидацию или не
+                                     является уникальным  
+
+        :return: id созданного ипподрома
+        """
         name = name.strip().lower()
 
         if re.search('[0-9]', name) is not None:
@@ -66,7 +105,22 @@ class DB:
 
         return self._cursor.lastrowid
 
-    def create_owner(self, name: str, telephone: str, address: str):
+    def create_owner(self, name: str, telephone: str, address: str) -> int:
+        """
+        Создание нового владельца.
+
+        :param name: имя
+        :type name: str
+        :param telephone: номер телефона
+        :type telephone: str
+        :param address: address
+        :type address: str
+
+        :raises NameError: если имя не прошло валидацию
+        :raises PhoneNumberError: если номер не прошел валидацию
+
+        :return: id созданного владельца
+        """
         name = name.strip().lower()
         telephone.strip()
 
@@ -86,7 +140,28 @@ class DB:
                      name: str,
                      age: int,
                      gender: Union[Literal['мужской'], Literal['женский']],
-                     owner_id: int):
+                     owner_id: int) -> int:
+        """
+        Создание новой лошади.
+
+        :param name: имя
+        :type name: str
+        :param age: возраст
+        :type age: str
+        :param gender: пол
+        :type gender: str
+        :param owner_id: id владельца
+        :type owner_id: int
+
+        :raises IDError: если id владельца не целое число
+        :raises NameError: если имя не прошло валидацию
+        :raises GenderError: если значение строки с полом
+                             не равно "мужской" или "женский"
+        :raises AgeError: если значение строки с возрастом
+                          не является целым числом > 0
+
+        :return: id созданного коня
+        """
         if not isinstance(owner_id, int):
             raise IDError()
 
@@ -115,7 +190,29 @@ class DB:
                      name: str,
                      age: str,
                      address: str,
-                     rating: str):
+                     rating: str) -> int:
+        """
+        Создание нового жокея.
+
+        :param name: имя
+        :type name: str
+        :param age: возраст
+        :type age: str
+        :param address: address
+        :type address: str
+        :param rating: рейтинг
+        :type rating: str
+
+        :raises NameError: если имя не прошло валидацию
+        :raises JockeyAgeError: если значение строки с 
+                                возрастом не равно целому
+                                числу >= 18
+        :raises JockeyRatingError: если значение строки с 
+                                   рейтингом не равно целому
+                                   числу >= 0
+
+        :return: id созданного жокея
+        """
         name = name.strip().lower()
         address = address.strip()
         try:
@@ -143,7 +240,23 @@ class DB:
     def create_race(self,
                     name: str,
                     date: str,
-                    hippodrome_id: int):
+                    hippodrome_id: int) -> int:
+        """
+        Создание нового заезда.
+
+        :param name: название
+        :type name: str
+        :param date: дата
+        :type date: str
+        :param hippodrome_id: id ипподрома
+        :type hippodrome_id: int
+
+        :raises IDError: если id ипподрома не целое число
+        :raises NameError: если название не прошло валидацию
+        :raises DateError: если дата не прошла валидацию
+
+        :return: id созданного заезда
+        """
         if not isinstance(hippodrome_id, int):
             raise IDError()
 
@@ -168,6 +281,30 @@ class DB:
                            race_id: int,
                            horse_id: int,
                            jockey_id: int):
+        """
+        Создание нового результата заезда.
+
+        :param result_place: занятое жокеем место
+        :type result_place: str
+        :param result_time: время, за которое жокей
+                            добрался до финиша
+        :type result_time: str
+        :param race_id: id заезда
+        :type race_id: int
+        :param horse_id: id лошади
+        :type horse_id: int
+        :param jockey_id: id жокея
+        :type jockey_id: int
+
+        :raises IDError: если любой из переданных id не
+                         является целым числом
+        :raises RaceResultTimeError: если значение строки с временем
+                                     результата не является целым
+                                     числом > 0
+        :raises RaceResultPlaceError: если значение строки с занятым
+                                      местом не является целым
+                                      числом в промежутке от 1 до 20
+        """
         if not isinstance(race_id, int)\
            or not isinstance(jockey_id, int)\
            or not isinstance(horse_id, int):
@@ -194,18 +331,24 @@ class DB:
 
 
     def get_all_horses(self) -> list[tuple]:
+        """
+        Получение всех лошадей
+
+        :return: список кортежей из id и имен
+        """
         return self._execute("""
             SELECT
-                h.id, h.name, h.age, h.gender, o.name, o.id
+                id, name
             FROM
-                "Horse" as h
-            JOIN
-                "Owner" as o
-            ON
-                h.owner_id = o.id;
+                "Horse";
         """)
 
     def get_all_owners(self) -> list[tuple]:
+        """
+        Получение всех владельцев
+
+        :return: список кортежей из id и имен
+        """
         return self._execute("""
             SELECT
                 id, name
@@ -214,6 +357,11 @@ class DB:
         """)
 
     def get_all_jockeys(self) -> list[tuple]:
+        """
+        Получение всех жокеев
+
+        :return: список кортежей из id и имен
+        """
         return self._execute("""
             SELECT
                 id, name
@@ -222,6 +370,11 @@ class DB:
         """)
 
     def get_all_races(self) -> list[tuple]:
+        """
+        Получение всех заездов
+
+        :return: список кортежей из id и имен
+        """
         return self._execute("""
             SELECT
                 id, name
@@ -230,6 +383,11 @@ class DB:
         """)
 
     def get_all_hippodromes(self) -> list[tuple]:
+        """
+        Получение всех ипподромов
+
+        :return: список кортежей из id и имен
+        """
         return self._execute("""
             SELECT
                 id, name
@@ -238,6 +396,18 @@ class DB:
         """)
 
     def get_jockeys_that_not_in_race(self, race_id: int) -> list[tuple]:
+        """
+        Получение жокеев, которые не участвуют в
+        указанном заезде.
+
+        :param race_id: id заезда
+        :type race: int
+
+        :raises IDError: если id заезда не целое
+                         число
+        
+        :return: список кортежей из id и имен
+        """
         if not isinstance(race_id, int):
             raise IDError()
 
@@ -258,6 +428,18 @@ class DB:
         """, race_id)
 
     def get_horses_that_not_in_race(self, race_id: int) -> list[tuple]:
+        """
+        Получение лодашей, которые не участвуют в
+        указанном заезде.
+
+        :param race_id: id заезда
+        :type race: int
+
+        :raises IDError: если id заезда не целое
+                         число
+        
+        :return: список кортежей из id и имен
+        """
         if not isinstance(race_id, int):
             raise IDError()
 
@@ -278,6 +460,18 @@ class DB:
         """, race_id)
 
     def get_owner(self, owner_id) -> list[tuple]:
+        """
+        Получение информации об указанном владельце.
+
+        :param owner_id: id владельца
+        :type owner_id: int
+
+        :raises IDError: если id владельца не целое
+                         число
+
+        :return: список с кортежем из имени, адреса
+                 и номера мобильного телефона
+        """
         if not isinstance(owner_id, int):
             raise IDError()
 
@@ -291,6 +485,18 @@ class DB:
         """, owner_id)
 
     def get_owner_horses(self, owner_id: int) -> list[tuple]:
+        """
+        Получение лошадей, принадлежащих указанному
+        владельцу.
+
+        :param owner_id: id владельца
+        :type owner_id: int
+
+        :raises IDError: если id владельца не целое
+                         число
+
+        :return: список кортежей из id и имен
+        """
         if not isinstance(owner_id, int):
             raise IDError()
 
@@ -306,6 +512,24 @@ class DB:
     def get_owners_with_horses_count_in_range(self,
                                                horses_from: str,
                                                horses_to: str) -> list[tuple]:
+        """
+        Получение владельцев, у которых количество
+        лошадей находится в указанном диапазоне.
+        Если начало или конец промежутка не указаны
+        (передана пустая строка),то им присваиваются
+        минимальное/максимальное значения соответственно.
+
+        :param horses_from: начало промежутка
+        :type horses_from: str
+        :param horses_to: конец промежутка
+        :type horses_to: str
+
+        :raises CountValueError: если значение строки с
+                                 границей промежутка не
+                                 является целым числом
+        
+        :return: список кортежей из id и имен
+        """
         if not horses_from:
             horses_from = self._execute("""
                 SELECT
@@ -357,6 +581,18 @@ class DB:
         """, horses_from, horses_to)
 
     def get_horse(self, horse_id: int) -> list[tuple]:
+        """
+        Получение информации об указанном коне.
+
+        :param horse_id: id владельца
+        :type horse_id: int
+
+        :raises IDError: если id лошади не целое
+                         число
+
+        :return: список с кортежем из имени, возраста и
+                 пола коня, имени и id владельца 
+        """
         if not isinstance(horse_id, int):
             raise IDError()
 
@@ -376,6 +612,24 @@ class DB:
     def get_horses_with_age_in_range(self,
                                      age_from: str,
                                      age_to: str) -> list[tuple]:
+        """
+        Получение коней, у которых возраст находится 
+        в указанном диапазоне.
+        Если начало или конец промежутка не указаны
+        (передана пустая строка),то им присваиваются
+        минимальное/максимальное значения соответственно.
+
+        :param age_from: начало промежутка
+        :type age_from: str
+        :param age_to: конец промежутка
+        :type age_to: str
+
+        :raises AgeError: если значение строки с
+                          границей промежутка не
+                          является целым числом
+        
+        :return: список кортежей из id и имен
+        """
         if not age_from:
             age_from = self._execute('SELECT MIN(age) FROM "Horse";')[0][0]
         
@@ -399,6 +653,18 @@ class DB:
         """, age_from, age_to)
 
     def get_races_with_horse(self, horse_id: int) -> list[tuple]:
+        """
+        Получение заездов, в которых учавствовала
+        указанная лошадь.
+
+        :param horse_id: id коня
+        :type horse_id: int
+
+        :raises IDError: если id лошади не целое
+                         число
+
+        :return: список кортежей из id и имен
+        """
         if not isinstance(horse_id, int):
             raise IDError()
 
@@ -416,6 +682,18 @@ class DB:
         """, horse_id)
 
     def get_race(self, race_id: int) -> list[tuple]:
+        """
+        Получение информации об указанном заезде.
+
+        :param race_id: id заезда
+        :type race_id: int
+
+        :raises IDError: если id заезда не целое
+                         число
+
+        :return: список с кортежем из имени и даты
+                 заезда, имени и id ипподрома 
+        """
         if not isinstance(race_id, int):
             raise IDError()
         return self._execute("""
@@ -432,6 +710,25 @@ class DB:
         """, race_id)
 
     def get_races_in_date_range(self, date_from: str, date_to: str) -> list[tuple]:
+        """
+        Получение заездов дата проведения которых
+        лежит в указанном промежутке.
+        Если начало или конец промежутка не указаны
+        (передана пустая строка),то им присваиваются
+        минимальное/максимальное значения соответственно.
+
+        :param date_from: начало промежутка
+        :type date_from: str
+        :param date_to: конец промежутка
+        :type date_to: str
+
+        :raises CountValueError: если значение строки с
+                                 границей промежутка не
+                                 является целым числом
+        :raises DateError: если даты не прошли валидацию
+
+        :return: список кортежей из id и имен
+        """
         if not date_from:
             date_from = self._execute('SELECT MIN(date) FROM "Race";')[0][0]
         else:
@@ -456,6 +753,19 @@ class DB:
         """, date_from, date_to)
 
     def get_race_results(self, race_id: int) -> list[tuple]:
+        """
+        Получение результатов указанного заезда.
+
+        :param race_id: id заезда
+        :type race_id: int
+
+        :raies IDError: если id заезда не
+                        является целым числом
+
+        :return: список с кортежем из id, места
+                 и времени резульата, имени и id жокея,
+                 имени и id коня
+        """
         if not isinstance(race_id, int):
             raise IDError()
 
@@ -478,6 +788,18 @@ class DB:
         """, race_id)
 
     def get_jockey(self, jockey_id: int) -> list[tuple]:
+        """
+        Получение информации об указанном жокее.
+
+        :param jockey_id: id жокея
+        :type jockey_id: int
+
+        :raises IDError: если id жокея не целое
+                         число
+
+        :return: список с кортежем из имени, возраста,
+                 адреса и рейтинга жокея
+        """
         if not isinstance(jockey_id, int):
             raise IDError()
 
@@ -491,6 +813,18 @@ class DB:
         """, jockey_id)
 
     def get_jockeys_races(self, jockey_id: int) -> list[tuple]:
+        """
+        Получение заездов, в которых учавствовал
+        указанный жокей.
+
+        :param jockey_id: id коня
+        :type jockey_id: int
+
+        :raises IDError: если id жокея не целое
+                         число
+
+        :return: список кортежей из id и имен
+        """
         if not isinstance(jockey_id, int):
             raise IDError()
 
@@ -508,6 +842,24 @@ class DB:
         """, jockey_id)
 
     def get_jockeys_with_rating_in_range(self, rating_from: str, rating_to: str) -> list[tuple]:
+        """
+        Получение жокеев, рейтинг которых находится
+        в указанном диапазоне.
+        Если начало или конец промежутка не указаны
+        (передана пустая строка),то им присваиваются
+        минимальное/максимальное значения соответственно.
+
+        :param rating_from: начало промежутка
+        :type rating_from: str
+        :param rating_to: конец промежутка
+        :type rating_to: str
+
+        :raises JockeyRatingError: если значение строки с
+                                   границей промежутка не
+                                   является целым числом
+        
+        :return: список кортежей из id и имен
+        """
         if not rating_from:
             rating_from = self._execute('SELECT MIN(rating) FROM "Jockey";')[0][0]
         
@@ -531,6 +883,18 @@ class DB:
         """, rating_from, rating_to)
 
     def get_hippodrome_races(self, hippodrome_id: int) -> list[tuple]:
+        """
+        Получение заездов, проведенных на указанном
+        ипподроме.
+
+        :param hippodrome_id: id коня
+        :type hippodrome_id: int
+
+        :raises IDError: если id ипподрома не целое
+                         число
+
+        :return: список кортежей из id и имен
+        """
         if not isinstance(hippodrome_id, int):
             raise IDError()
 
@@ -546,6 +910,25 @@ class DB:
     def get_hippodrome_with_races_in_range(self,
                                            races_from: str,
                                            races_to: str) -> list[tuple]:
+        """
+        Получение ипподромов, количество проведенных
+        заездов на которых находится в указанном
+        промежутке.
+        Если начало или конец промежутка не указаны
+        (передана пустая строка),то им присваиваются
+        минимальное/максимальное значения соответственно.
+
+        :param races_from: начало промежутка
+        :type races_from: str
+        :param races_to: конец промежутка
+        :type races_to: str
+
+        :raises CountValueError: если значение строки с
+                                 границей промежутка не
+                                 является целым числом
+        
+        :return: список кортежей из id и имен
+        """
         if not races_from:
             races_from = self._execute("""
                 SELECT
@@ -597,6 +980,17 @@ class DB:
         """, races_from, races_to)
 
     def get_hippodrome(self, hippodrome_id: int) -> list[tuple]:
+        """
+        Получение информации об указанном ипподроме.
+
+        :param hippodrome_id: id ипподрома
+        :type hippodrome_id: int
+
+        :raises IDError: если id лошади не целое
+                         число
+
+        :return: список с кортежем из имени ипподрома. 
+        """
         if not isinstance(hippodrome_id, int):
             raise IDError()
 
@@ -609,7 +1003,16 @@ class DB:
                 id = ?;
         """, hippodrome_id)
 
-    def delete_owner(self, owner_id: int):
+    def delete_owner(self, owner_id: int) -> None:
+        """
+        Удаление указанного владельца.
+
+        :param owner_id: id владельца
+        :type owner_id: int
+
+        :raises IDError: если id владельца
+                         не целое число
+        """
         if not isinstance(owner_id, int):
             raise IDError()
 
@@ -618,7 +1021,16 @@ class DB:
             WHERE id = ?;
         """, owner_id)
 
-    def delete_horse(self, horse_id: int):
+    def delete_horse(self, horse_id: int) -> None:
+        """
+        Удаление указанного коня.
+
+        :param horse_id: id лошади
+        :type horse_id: int
+
+        :raises IDError: если id коня
+                         не целое число
+        """
         if not isinstance(horse_id, int):
             raise IDError()
 
@@ -627,7 +1039,16 @@ class DB:
             WHERE id = ?;
         """, horse_id)
 
-    def delete_jockey(self, jockey_id: int):
+    def delete_jockey(self, jockey_id: int) -> None:
+        """
+        Удаление указанного жокея.
+
+        :param jockey_id: id жокея
+        :type jockey_id: int
+
+        :raises IDError: если id жокея
+                         не целое число
+        """
         if not isinstance(jockey_id, int):
             raise IDError()
 
@@ -636,7 +1057,16 @@ class DB:
             WHERE id = ?;
         """, jockey_id)
 
-    def delete_race(self, race_id: int):
+    def delete_race(self, race_id: int) -> None:
+        """
+        Удаление указанного заезда.
+
+        :param race_id: id заезда
+        :type race_id: int
+
+        :raises IDError: если id заезда
+                         не целое число
+        """
         if not isinstance(race_id, int):
             raise IDError()
 
@@ -645,7 +1075,16 @@ class DB:
             WHERE id = ?;
         """, race_id)
 
-    def delete_race_result(self, race_result_id: int):
+    def delete_race_result(self, race_result_id: int) -> None:
+        """
+        Удаление указанного результата заезда.
+
+        :param race_result_id: id результата заезда
+        :type race_result_id: int
+
+        :raises IDError: если id результата заезда
+                         не целое число
+        """
         if not isinstance(race_result_id, int):
             raise IDError()
 
@@ -654,7 +1093,16 @@ class DB:
             WHERE id = ?;
         """, race_result_id)
 
-    def delete_hippodrome(self, hippodrome_id: int):
+    def delete_hippodrome(self, hippodrome_id: int) -> None:
+        """
+        Удаление указанного ипподрома.
+
+        :param hippodrome_id: id ипподрома
+        :type hippodrome_id: int
+
+        :raises IDError: если id ипподрома
+                         не целое число
+        """
         if not isinstance(hippodrome_id, int):
             raise IDError()
 

@@ -108,7 +108,7 @@ class DB:
         self._execute("""
             INSERT INTO "Hippodrome" (name)
             VALUES (?);
-        """, name)
+        """, name.capitalize())
 
         return self._cursor.lastrowid
 
@@ -339,13 +339,13 @@ class DB:
         except ValueError:
             raise RaceResultPlaceError()
 
-        race_results = self._execute('SELECT jockey_id, horse_id, result_place FROM "Race_result";')
+        race_results = self._execute('SELECT horse_id, jockey_id, result_place FROM "Race_result";')
 
-        if any(horse_id in x for x in race_results):
+        if any(horse_id in x[0] for x in race_results):
             raise RaceResultCorrectnessError('Указанная лошадь уже учавствует в этом заезде')
-        elif any(jockey_id in x for x in race_results):
+        elif any(jockey_id in x[1] for x in race_results):
             raise RaceResultCorrectnessError('Указанный жокей уже учавствует в этом заезде')
-        elif any(result_place in x for x in race_results):
+        elif any(result_place in x[2] for x in race_results):
             raise RaceResultCorrectnessError('В этом заезде данное место уже занято.')
 
         self._execute("""

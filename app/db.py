@@ -143,7 +143,7 @@ class DB:
         self._execute("""
             INSERT INTO "Owner" (name, telephone, address)
             VALUES (?, ?, ?);
-        """, name.capitalize(), self._parse_phone_number(telephone), address)
+        """, name.capitalize(), telephone, address)
 
         return self._cursor.lastrowid
 

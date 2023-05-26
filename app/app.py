@@ -544,9 +544,13 @@ class App:
         jockeys = [f'{x[0]} - {x[1]}' for x in self._db.get_jockeys_that_not_in_race(race_id)]
         horses = [f'{x[0]} - {x[1]}' for x in self._db.get_horses_that_not_in_race(race_id)]
 
-        if not jockeys or not horses:
+        if not jockeys:
             window.destroy()
-            App.show_message('Для добавления результата заезда в БД должны присутствовать лошади и жокеи.')
+            App.show_message('В БД нет записей о жокеях, которые не учавствуют в данном заезде.')
+            return
+        elif not horses:
+            window.destroy()
+            App.show_message('В БД нет записей о лошадях, которые не учавствуют в данном заезде.')
             return
 
         jockey_choose = ctk.CTkOptionMenu(window,

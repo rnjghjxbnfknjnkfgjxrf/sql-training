@@ -63,7 +63,23 @@ INIT_DB_QUERY = """
                 UNIQUE (jockey_id),
                 UNIQUE (horse_id)
                 );
-                
+
+                CREATE TRIGGER IF NOT EXISTS check_is_race_result_correct
+                BEFORE INSERT ON "Race_result"
+                BEGIN
+                    WITH 
+                        jockeys_in_race AS (SELECT jockey_id),
+                        horses_in_race AS (SELECT horse_id),
+                        places_in_race AS (SELECT result_place)
+                    SELECT 
+                        CASE
+                            WHEN (NEW.result_place) IN places_in_race THEN (RAISE(ABORT, 'В этом заезде данное место уже занято.'))
+                            WHEN (NEW.jockey_id) IN jockeys_in_race THEN (RAISE(ABORT, 'Указанный жокей уже учавствует в этом заезде'))
+                            WHEN (NEW.horse_id) in horses_in_race THEN (RAISE(ABORT, 'Указанная лошадь уже учавствует в этом заезде'))
+                        END
+                    FROM "Race_result";
+                END;
+
                 CREATE TRIGGER IF NOT EXISTS update_jockey_rating 
                 AFTER INSERT ON "Race_result"
                 BEGIN
@@ -74,11 +90,11 @@ INIT_DB_QUERY = """
                                     WHEN (NEW.result_place = 3) THEN (rating + 15)
                                     WHEN (NEW.result_place IN (4, 10)) THEN (rating + 5)
                                     WHEN (NEW.result_place > 10) THEN (rating + 1)
-                                END)
+                                  END)
                     WHERE
                         id = NEW.jockey_id;
                 END;
-
+                
                 CREATE TRIGGER IF NOT EXISTS check_race_date
                 BEFORE INSERT ON "Race"
                 WHEN 

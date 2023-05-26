@@ -69,6 +69,13 @@ class DB:
             phone_number) is not None
 
     @staticmethod
+    def _parse_phone_number(phone_number: str) -> str:
+        if phone_number.startswith('+'):
+            return ''.join(re.split('[ -]', phone_number[2:]))
+        else:
+            return ''.join(re.split('[ -]', phone_number[1:]))
+
+    @staticmethod
     def validate_date(date: str) -> bool:
         """Валидация даты."""
         try:
@@ -118,6 +125,7 @@ class DB:
 
         :raises NameError: если имя не прошло валидацию
         :raises PhoneNumberError: если номер не прошел валидацию
+                                  или не является уникальным
 
         :return: id созданного владельца
         """
@@ -127,12 +135,15 @@ class DB:
         if not DB.validate_name(name):
             raise NameError()
         elif not DB.validate_phone_number(telephone):
-            raise PhoneNumberError()
+            raise PhoneNumberError('incorrect_phone')
+        telephone = self._parse_phone_number(telephone)
+        if any(telephone in x for x in self._execute('SELECT telephone FROM "Owner";')):
+            raise PhoneNumberError('phone_not_unique')
 
         self._execute("""
             INSERT INTO "Owner" (name, telephone, address)
             VALUES (?, ?, ?);
-        """, name.capitalize(), telephone, address)
+        """, name.capitalize(), self._parse_phone_number(telephone), address)
 
         return self._cursor.lastrowid
 
@@ -304,6 +315,10 @@ class DB:
         :raises RaceResultPlaceError: если значение строки с занятым
                                       местом не является целым
                                       числом в промежутке от 1 до 20
+        :raises RaceResultCorrectnessError: если указанные жокей или 
+                                            лошадь уже участвуют в данном
+                                            заезде или указанное место
+                                            уже занято
         """
         if not isinstance(race_id, int)\
            or not isinstance(jockey_id, int)\
@@ -323,6 +338,15 @@ class DB:
                 raise ValueError()
         except ValueError:
             raise RaceResultPlaceError()
+
+        race_results = self._execute('SELECT jockey_id, horse_id, result_place FROM "Race_result";')
+
+        if any(horse_id in x for x in race_results):
+            raise RaceResultCorrectnessError('Указанная лошадь уже учавствует в этом заезде')
+        elif any(jockey_id in x for x in race_results):
+            raise RaceResultCorrectnessError('Указанный жокей уже учавствует в этом заезде')
+        elif any(result_place in x for x in race_results):
+            raise RaceResultCorrectnessError('В этом заезде данное место уже занято.')
 
         self._execute("""
             INSERT INTO "Race_result" (result_place, result_time, race_id, horse_id, jockey_id)
@@ -1118,10 +1142,14 @@ class DBExecuteQueryError(Exception):
 
 
 class PhoneNumberError(Exception):
-    def __init__(self) -> None:
-        super().__init__('Неправильный формат номера телефона:\n' +
-                         'Номер должен состоять из 11 цифр, начинаться с 8 или с +7,\n ' +
-                         'в качестве разделителей можно использовать пробел или знак тире.')
+    def __init__(self, message_type: Union[Literal['incorrect_phone'], Literal['phone_not_unique']]) -> None:
+        if message_type == 'incorrect_name':
+            message = 'Неправильный формат номера телефона:\n' +\
+                      'Номер должен состоять из 11 цифр, начинаться с 8 или с +7,\n ' +\
+                      'в качестве разделителей можно использовать пробел или знак тире.'
+        else:
+            message = 'Владелец с таким номера телефона уже существует'
+        super().__init__(message)
 
 
 class GenderError(Exception):
@@ -1176,6 +1204,11 @@ class DateError(Exception):
 class RaceResultPlaceError(Exception):
     def __init__(self) -> None:
         super().__init__('Занятое место должно быть целым числом в промежутке от 1 до 20.')
+
+
+class RaceResultCorrectnessError(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
 
 
 class RaceResultTimeError(Exception):

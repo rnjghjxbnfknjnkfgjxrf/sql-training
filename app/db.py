@@ -1143,7 +1143,7 @@ class DBExecuteQueryError(Exception):
 
 class PhoneNumberError(Exception):
     def __init__(self, message_type: Union[Literal['incorrect_phone'], Literal['phone_not_unique']]) -> None:
-        if message_type == 'incorrect_name':
+        if message_type == 'incorrect_phone':
             message = 'Неправильный формат номера телефона:\n' +\
                       'Номер должен состоять из 11 цифр, начинаться с 8 или с +7,\n ' +\
                       'в качестве разделителей можно использовать пробел или знак тире.'

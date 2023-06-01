@@ -525,6 +525,57 @@ class App:
                     }, window)
         ).pack(padx=10, pady=10)
 
+    def _show_race_editing_window(self,
+                                  race_id: int,
+                                  race_info_window: ctk.CTkToplevel) -> None:
+        """
+        Отрисовывает окно редактирования заезда.
+        
+        :param race_id: id заезда
+        :type race_id: int
+        :param race_info_window: окно, в котором нужно
+                                 обновить информацию
+        :type race_info_window: CTkToplevel
+        """
+        window = ctk.CTkToplevel()
+        window.title('Редактирование заезда')
+        window.geometry('500x300')
+
+        race_info = self._db.get_race(race_id)
+        race_name = ctk.StringVar(value=race_info[0][0])
+        race_date = ctk.StringVar(value=race_info[0][1])
+        race_hippodrome = ctk.StringVar(value=race_info[0][2])
+        hippodromes = {x[1]:x[0] for x in self._db.get_all_hippodromes()}
+
+        name_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Название',
+                                  width=400,
+                                  corner_radius=0,
+                                  textvariable=race_name)
+        date_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Дата (YYYY-MM-DD)',
+                                  width=400,
+                                  corner_radius=0,
+                                  textvariable=race_date)
+        hippodrome_choose = ctk.CTkOptionMenu(window,
+                                              width=400,
+                                              values=list(hippodromes.keys()),
+                                              variable=race_hippodrome)
+
+        name_entry.pack(padx=10, pady=10)
+        date_entry.pack(padx=10, pady=10)
+        hippodrome_choose.pack(padx=10, pady=10)
+        ctk.CTkButton(
+            window,
+            text='Обновить',
+            command=lambda: self._edit_race({
+                    'name': name_entry.get(),
+                    'date': date_entry.get(),
+                    'hippodrome_id': hippodromes[hippodrome_choose.get()],
+                    'id': race_id
+                    },race_info_window, window)
+        ).pack(padx=10, pady=10)
+
     def _show_race_result_adding_window(self,
                                         race_id: int,
                                         race_info_window: ctk.CTkToplevel) -> None:
@@ -618,6 +669,57 @@ class App:
                     }, window)
         ).pack(padx=10, pady=10)
 
+    def _show_owner_editing_window(self,
+                                  owner_id: int,
+                                  owner_info_window: ctk.CTkToplevel) -> None:
+        """
+        Отрисовывает окно редактирования владельца.
+        
+        :param owner_id: id владельца
+        :type owner_id: int
+        :param owner_info_window: окно, в котором нужно
+                                  обновить информацию
+        :type owner_info_window: CTkToplevel
+        """
+        window = ctk.CTkToplevel()
+        window.title('Редактирование владельца')
+        window.geometry('500x300')
+
+        owner_info = self._db.get_owner(owner_id)
+        owner_name = ctk.StringVar(value=owner_info[0][0])
+        owner_address = ctk.StringVar(value=owner_info[0][1])
+        owner_phone_number = ctk.StringVar(value=owner_info[0][2])
+
+        name_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Имя',
+                                  width=400,
+                                  corner_radius=0,
+                                  textvariable=owner_name)
+        address_entry = ctk.CTkEntry(window,
+                                     placeholder_text='Адрес',
+                                     width=400,
+                                     corner_radius=0,
+                                     textvariable=owner_address)
+        phone_number_entry = ctk.CTkEntry(window,
+                                          placeholder_text='Телефон',
+                                          width=400,
+                                          corner_radius=0,
+                                          textvariable=owner_phone_number)
+
+        name_entry.pack(padx=10, pady=10)
+        address_entry.pack(padx=10, pady=10)
+        phone_number_entry.pack(padx=10, pady=10)
+        ctk.CTkButton(
+            window,
+            text='Обновить',
+            command=lambda: self._edit_owner({'name': owner_name.get(),
+                                              'address': owner_address.get(),
+                                              'telephone': owner_phone_number.get(),
+                                              'id': owner_id},
+                                              owner_info_window,
+                                              window)
+        ).pack(padx=10, pady=10)
+
     def _show_horse_adding_window(self,
                                   owner_id: int = None,
                                   owner_info_window: ctk.CTkToplevel = None) -> None:
@@ -671,11 +773,76 @@ class App:
                     }, window, owner_info_window)
         ).pack(padx=10, pady=10)
 
+    def _show_horse_editing_window(self,
+                                   horse_id: int,
+                                   horse_info_window: ctk.CTkToplevel) -> None:
+        """
+        Отрисовывает окно редактирования лошади.
+
+        :param horse_id: id коня
+        :type horse_id: int
+        :param horse_info_window: окно, в котором нужно
+                                  обновить информацию
+        :type horse_info_window: CTkToplevel
+        :param owner_info_window: окно, данные в котором нужно будет обновить
+                                  после добавления новой лошади, если
+                                  создание вызвано из окна с информацией
+                                  о владельце (default None)
+        :type owner_info_window: CTkToplevel
+        """
+        window = ctk.CTkToplevel()
+        window.title('Редактирование лошади')
+        window.geometry('500x300')
+
+        horse_info = self._db.get_horse(horse_id)
+        horse_name = ctk.StringVar(value=horse_info[0][0])
+        horse_age = ctk.StringVar(value=horse_info[0][1])
+        horse_gender = ctk.StringVar(value=horse_info[0][2])
+
+        name_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Имя',
+                                  width=400,
+                                  corner_radius=0,
+                                  textvariable=horse_name)
+        age_entry = ctk.CTkEntry(window,
+                                 placeholder_text='Возраст',
+                                 width=400,
+                                 corner_radius=0,
+                                 textvariable=horse_age)
+        gender_entry = ctk.CTkEntry(window,
+                                    placeholder_text='Пол (мужской/женский)',
+                                    width=400,
+                                    corner_radius=0,
+                                    textvariable=horse_gender)
+
+        horse_owner = ctk.StringVar(value=f'{horse_info[0][4]} - {horse_info[0][3]}')
+        owner_choose = ctk.CTkOptionMenu(window,
+                                         width=400,
+                                         values=[f'{x[0]} - {x[1]}' for x in self._db.get_all_owners()],
+                                         variable=horse_owner)
+
+        name_entry.pack(padx=10, pady=10)
+        age_entry.pack(padx=10, pady=10)
+        gender_entry.pack(padx=10, pady=10)
+        owner_choose.pack(padx=10, pady=10)
+            
+        ctk.CTkButton(
+            window,
+            text='Обновить',
+            command=lambda: self._edit_horse({
+                    'name': horse_name.get(),
+                    'age': horse_age.get(),
+                    'gender': horse_gender.get(),
+                    'owner_id': int(horse_owner.get().split('-')[0]),
+                    'id': horse_id
+                    },horse_info_window, window)
+        ).pack(padx=10, pady=10)
+
     def _show_jockey_adding_window(self) -> None:
-        """Отрисовывает окно добавления нового жокея"""
+        """Отрисовывает окно добавления нового жокея."""
         window = ctk.CTkToplevel()
         window.title('Добавление жокея')
-        window.geometry('500x300')
+        window.geometry('500x200')
 
         name_entry = ctk.CTkEntry(window,
                                   placeholder_text='Имя',
@@ -689,32 +856,76 @@ class App:
                                      placeholder_text='Адрес',
                                      width=400,
                                      corner_radius=0)
-        rating_entry = ctk.CTkEntry(window,
-                                    placeholder_text='Рейтинг',
-                                    width=400,
-                                    corner_radius=0)
 
         name_entry.pack(padx=10, pady=10)
         age_entry.pack(padx=10, pady=10)
         address_entry.pack(padx=10, pady=10)
-        rating_entry.pack(padx=10, pady=10)
-
         ctk.CTkButton(
             window,
             text='Добавить',
             command=lambda: self._add_jockey({
                     'name': name_entry.get(),
                     'age': age_entry.get(),
-                    'address': address_entry.get(),
-                    'rating': rating_entry.get()
+                    'address': address_entry.get()
                     }, window)
         ).pack(padx=10, pady=10)
 
+    def _show_jockey_editing_window(self,
+                                    jockey_id: int,
+                                    jockey_info_window: ctk.CTkToplevel) -> None:
+        """
+        Отрисовывает окно редактирования жокея.
+        
+        :param jockey_id: id жокея
+        :type jockey_id: int
+        :param jockey_info_window: окно, в котором нужно
+                                   обновить информацию
+        :type jockey_info_window: CTkToplevel
+        """
+        window = ctk.CTkToplevel()
+        window.title('Редактирование жокея')
+        window.geometry('500x200')
+
+        jockey_info = self._db.get_jockey(jockey_id)
+        jockey_name = ctk.StringVar(value=jockey_info[0][0])
+        jockey_age = ctk.StringVar(value=jockey_info[0][1])
+        jockey_address = ctk.StringVar(value=jockey_info[0][2])
+
+        name_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Имя',
+                                  width=400,
+                                  corner_radius=0,
+                                  textvariable=jockey_name)
+        age_entry = ctk.CTkEntry(window,
+                                 placeholder_text='Возраст',
+                                 width=400,
+                                 corner_radius=0,
+                                 textvariable=jockey_age)
+        address_entry = ctk.CTkEntry(window,
+                                     placeholder_text='Адрес',
+                                     width=400,
+                                     corner_radius=0,
+                                     textvariable=jockey_address)
+
+        name_entry.pack(padx=10, pady=10)
+        age_entry.pack(padx=10, pady=10)
+        address_entry.pack(padx=10, pady=10)
+        ctk.CTkButton(
+            window,
+            text='Обновить',
+            command=lambda: self._edit_jockey({'name': jockey_name.get(),
+                                               'age': jockey_age.get(),
+                                               'address': jockey_address.get(),
+                                               'id': jockey_id},
+                                               jockey_info_window,
+                                               window)
+        ).pack(padx=10, pady=10)
+
     def _show_hippodrome_adding_window(self) -> None:
-        """Отрисовывает окно добавления нового ипподрома"""
+        """Отрисовывает окно добавления нового ипподрома."""
         window = ctk.CTkToplevel()
         window.title('Добавление ипподрома')
-        window.geometry('500x200')
+        window.geometry('500x150')
 
         name_entry = ctk.CTkEntry(window,
                                   placeholder_text='Название',
@@ -727,6 +938,40 @@ class App:
             command=lambda: self._add_hippodrome(name_entry.get(), window)
         ).pack(padx=10, pady=10)
 
+    def _show_hippodrome_editing_window(self,
+                                        hippodrome_id: int,
+                                        hippodrome_info_window: ctk.CTkToplevel) -> None:
+        """
+        Отрисовывает окно редактирования ипподрома.
+        
+        :param hippodrome_id: id ипподрома
+        :type hippodrome_id: int
+        :param hippodrome_info_window: окно, в котором нужно
+                                       обновить информацию
+        :type hippodrome_info_window: CTkToplevel
+        """
+        window = ctk.CTkToplevel()
+        window.title('Редактирование ипподрома')
+        window.geometry('500x150')
+
+        hippodrome_info = self._db.get_hippodrome(hippodrome_id)
+        hippodrome_name = ctk.StringVar(value=hippodrome_info[0][0])
+
+        name_entry = ctk.CTkEntry(window,
+                                  placeholder_text='Название',
+                                  width=400,
+                                  corner_radius=0,
+                                  textvariable=hippodrome_name)
+        name_entry.pack(padx=10, pady=10)
+        ctk.CTkButton(
+            window,
+            text='Обновить',
+            command=lambda: self._edit_hippodrome(hippodrome_name.get(),
+                                                  hippodrome_id,
+                                                  hippodrome_info_window,
+                                                  window)
+        ).pack(padx=10, pady=10)
+
     def _show_race_info(self, race_id: int) -> None:
         """
         Отрисовывает окно с информацией о выбранном заезде.
@@ -736,7 +981,7 @@ class App:
         """
         window = ctk.CTkToplevel()
         window.title('Информация о заезде')
-        window.geometry('400x500')
+        window.geometry('400x530')
         window.grid_anchor('n')
 
         race = {
@@ -769,7 +1014,14 @@ class App:
 
         ctk.CTkButton(
             window,
-            text='Удалить заезд',
+            text='Редактировать',
+            fg_color='#bf6c08',
+            font=ctk.CTkFont(size=18),
+            command=lambda: self._show_race_editing_window(race_id, window)
+        ).grid(row=7, column=0, sticky='ew')
+        ctk.CTkButton(
+            window,
+            text='Удалить',
             fg_color='maroon',
             font=ctk.CTkFont(size=18),
             command=lambda: self._delete_race(race_id, window)
@@ -779,7 +1031,7 @@ class App:
                       text='Добавить результат',
                       font=ctk.CTkFont(size=18),
                       command=lambda: self._show_race_result_adding_window(race_id, window))
-        result_adding_button.grid(row=7, column=0, sticky='ew')
+        result_adding_button.grid(row=8, column=0, columnspan=2, sticky='ew')
 
         if not self._db.get_all_horses() or not self._db.get_all_jockeys():
             result_adding_button.configure(state=DISABLED)
@@ -824,11 +1076,18 @@ class App:
 
         ctk.CTkButton(
             window,
-            text='Удалить жокея',
+            text='Редактировать',
+            fg_color='#bf6c08',
+            font=ctk.CTkFont(size=18),
+            command=lambda: self._show_jockey_editing_window(jockey_id, window)
+        ).grid(row=8, column=0, sticky='ew')
+        ctk.CTkButton(
+            window,
+            text='Удалить',
             fg_color='maroon',
             font=ctk.CTkFont(size=18),
             command=lambda: self._delete_jockey(jockey_id, window)
-        ).grid(row=8, column=0, columnspan=2, sticky='ew')
+        ).grid(row=8, column=1, sticky='ew')
 
     def _show_hippodrome_info(self, hippodrome_id: int) -> None:
         """
@@ -864,10 +1123,18 @@ class App:
 
         ctk.CTkButton(
             window,
-            text='Удалить ипподром',
+            text='Редактировать',
+            fg_color='#bf6c08',
+            font=ctk.CTkFont(size=18),
+            command=lambda: self._show_hippodrome_editing_window(hippodrome_id, window)
+        ).grid(row=5, column=0,sticky='ew')
+        ctk.CTkButton(
+            window,
+            text='Удалить',
             fg_color='maroon',
+            font=ctk.CTkFont(size=18),
             command=lambda: self._delete_hippodrome(hippodrome_id, window)
-        ).grid(row=5, column=0, columnspan=2, sticky='ew')
+        ).grid(row=5, column=1, sticky='ew')
 
     def _show_owner_info(self, owner_id: int) -> None:
         """
@@ -878,7 +1145,7 @@ class App:
         """
         window = ctk.CTkToplevel()
         window.title('Информация о владельце')
-        window.geometry('400x500')
+        window.geometry('350x500')
         window.grid_anchor('n')
 
         owner = {
@@ -898,19 +1165,27 @@ class App:
 
         scrollable_frame = ctk.CTkScrollableFrame(window)
         scrollable_frame.grid(row=4, column=0, rowspan=3, columnspan=2, sticky='ew')
+
         ctk.CTkButton(
             window,
-            text='Удалить владельца',
+            text='Редактировать',
+            fg_color='#bf6c08',
+            font=ctk.CTkFont(size=18),
+            command=lambda: self._show_owner_editing_window(owner_id, window)
+        ).grid(row=7, column=0, sticky='ew')
+        ctk.CTkButton(
+            window,
+            text='Удалить',
             fg_color='maroon',
             font=ctk.CTkFont(size=18),
             command=lambda: self._delete_owner(owner_id, window)
-        ).grid(row=7, column=1)
+        ).grid(row=7, column=1, sticky='ew')
         ctk.CTkButton(
             window,
             text='Добавить лошадь',
             font=ctk.CTkFont(size=18),
             command=lambda: self._show_horse_adding_window(owner_id, window)
-        ).grid(row=7, column=0)
+        ).grid(row=8, column=0, columnspan=2, sticky='ew')
         
         for horse in owner['horses']:
             ArgumentSendButton(
@@ -966,10 +1241,18 @@ class App:
 
         ctk.CTkButton(
             window,
-            text='Удалить лошадь',
+            text='Редактировать',
+            fg_color='#bf6c08',
+            font=ctk.CTkFont(size=18),
+            command=lambda: self._show_horse_editing_window(horse_id, window)
+        ).grid(row=8, column=0, sticky='ew')
+        ctk.CTkButton(
+            window,
+            text='Удалить',
             fg_color='maroon',
+            font=ctk.CTkFont(size=18),
             command=lambda: self._delete_horse(horse_id, window)
-        ).grid(row=8, column=0, columnspan=2, sticky='ew')
+        ).grid(row=8, column=1, sticky='ew')
 
     def _add_race(self,
                   race_data: dict,
@@ -993,9 +1276,43 @@ class App:
         else:
             creation_window.destroy()
             ArgumentSendButton(self._races_frame,
-                               text=race_data['name'].strip(),
+                               text=race_data['name'].strip().capitalize(),
                                command=self._show_race_info,
                                arg=race_id).pack(padx=10,pady=10)
+
+    def _edit_race(self,
+                  race_data: dict,
+                  race_info_window: ctk.CTkToplevel,
+                  editing_window: ctk.CTkToplevel) -> None:
+        """
+        Редактирование заезда,обновление страницы с заездами
+        и окна с информацией.
+
+        :param race_data: данные о заезде.
+        :type race_data: dict
+        :param race_info_window: окно, информацию в котором нужно обновить
+        :type race_info_window: CTkToplevel
+        :param editing_window: окно редактирования, которое нужно закрыть
+        :type editing_window: CTkToplevel
+        """
+        try:
+            self._db.update_race(
+                race_data['name'],
+                race_data['date'],
+                race_data['hippodrome_id'],
+                race_data['id']
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            race_info_window.destroy()
+            editing_window.destroy()
+            self._show_race_info(race_data['id'])
+
+            for button in self._races_frame.winfo_children():
+                if button._arg == race_data['id']:
+                    button.configure(text=race_data['name'].capitalize())
+                    break
 
     def _add_race_result(self,
                          race_id: int,
@@ -1060,6 +1377,40 @@ class App:
             ).pack(padx=10, pady=10)
             self._toggle_horse_adding_button_activity()
 
+    def _edit_owner(self,
+                   owner_data: dict,
+                   owner_info_window: ctk.CTkToplevel,
+                   editing_window: ctk.CTkToplevel) -> None:
+        """
+        Редактирование владельца,обновление страницы с владельцами
+        и окна с информацией.
+
+        :param owner_data: данные о владельце.
+        :type owner_data: dict
+        :param owner_info_window: окно, информацию в котором нужно обновить
+        :type owner_info_window: CTkToplevel
+        :param editing_window: окно редактирования, которое нужно закрыть
+        :type editing_window: CTkToplevel
+        """
+        try:
+            self._db.update_owner(
+                owner_data['name'],
+                owner_data['telephone'],
+                owner_data['address'],
+                owner_data['id']
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            owner_info_window.destroy()
+            editing_window.destroy()
+            self._show_owner_info(owner_data['id'])
+
+            for button in self._jockeys_frame.winfo_children():
+                if button._arg == owner_data['id']:
+                    button.configure(text=owner_data['name'].capitalize())
+                    break
+
     def _add_horse(self,
                    horse_data: dict,
                    creation_window: ctk.CTkToplevel,
@@ -1097,6 +1448,40 @@ class App:
                 owner_info_window.destroy()
                 self._show_owner_info(horse_data['owner_id'])
 
+    def _edit_horse(self,
+                   horse_data: dict,
+                   horse_info_window: ctk.CTkToplevel,
+                   editing_window: ctk.CTkToplevel) -> None:
+        """
+        Добавление нового коня в БД, обновление страницы с лошадьми
+        и обновление окна владельца, если добавление лошади
+        вызвано через него.
+
+        :param horse_data: данные о новоной лошади.
+        :type horse_data: dict
+        :param creation_window: окно создания, которое нужно закрыть.
+        :type creation_window: CTkToplevel
+        """
+        try:
+            self._db.update_horse(
+                horse_data['name'],
+                horse_data['age'],
+                horse_data['gender'],
+                horse_data['owner_id'],
+                horse_data['id']
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            horse_info_window.destroy()
+            editing_window.destroy()
+            self._show_horse_info(horse_data['id'])
+
+            for button in self._horses_frame.winfo_children():
+                if button._arg == horse_data['id']:
+                    button.configure(text=horse_data['name'].capitalize())
+                    break
+
     def _add_hippodrome(self,
                         name: str,
                         creation_window: ctk.CTkToplevel) -> None:
@@ -1122,6 +1507,35 @@ class App:
             ).pack(padx=10, pady=10)
             self._toggle_race_adding_button_activity()
 
+    def _edit_hippodrome(self,
+                        name: str,
+                        hippodrome_id: int,
+                        hippodrome_info_window: ctk.CTkToplevel,
+                        editing_window: ctk.CTkToplevel) -> None:
+        """
+        Редактирование ипподрома,обновление страницы с ипподромами
+        и окна с информацией.
+
+        :param name: новое название.
+        :type race_data: str
+        :param creation_window: окно, информацию в котором нужно обновить
+        :type creation_window: CTkToplevel
+        :param hippodrome_editing_window: окно редактировния, которое нужно закрыть
+        :type hippodrome_editing_window: CTkToplevel
+        """
+        try:
+            self._db.update_hippodrome(name, hippodrome_id)
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            editing_window.destroy()
+            hippodrome_info_window.destroy()
+            self._show_hippodrome_info(hippodrome_id)
+            for button in self._hippodromes_frame.winfo_children():
+                if button._arg == hippodrome_id:
+                    button.configure(text=name.capitalize())
+                    break
+
     def _add_jockey(self,
                     jockey_data: dict,
                     creation_window: ctk.CTkToplevel) -> None:
@@ -1138,7 +1552,6 @@ class App:
                 jockey_data['name'],
                 jockey_data['age'],
                 jockey_data['address'],
-                jockey_data['rating']
             )
         except Exception as err:
             App.show_message(str(err))
@@ -1150,6 +1563,40 @@ class App:
                 command=self._show_jockey_info,
                 arg=jockey_id
             ).pack(padx=10, pady=10)
+
+    def _edit_jockey(self,
+                    jockey_data: dict,
+                    jockey_info_window: ctk.CTkToplevel,
+                    editing_window: ctk.CTkToplevel) -> None:
+        """
+        Редактирование жокея,обновление страницы с жокеями
+        и окна с информацией.
+
+        :param jockey_data: данные о жокее.
+        :type jockey_data: dict
+        :param jockey_info_window: окно, информацию в котором нужно обновить
+        :type jockey_info_window: CTkToplevel
+        :param editing_window: окно редактирования, которое нужно закрыть
+        :type editing_window: CTkToplevel
+        """
+        try:
+            self._db.update_jockey(
+                jockey_data['name'],
+                jockey_data['age'],
+                jockey_data['address'],
+                jockey_data['id']
+            )
+        except Exception as err:
+            App.show_message(str(err))
+        else:
+            jockey_info_window.destroy()
+            editing_window.destroy()
+            self._show_jockey_info(jockey_data['id'])
+
+            for button in self._jockeys_frame.winfo_children():
+                if button._arg == jockey_data['id']:
+                    button.configure(text=jockey_data['name'].capitalize())
+                    break
 
     def _delete_race_result(self,
                             race_result_id: int,
@@ -1216,7 +1663,7 @@ class App:
                        joceky_id: int,
                        jockey_info_window: ctk.CTkToplevel) -> None:
         """
-        Удаление жокея из БД и обновление страницы жокеями.
+        Удаление жокея из БД и обновление страницы с жокеями.
 
         :param joceky_id: id жокея
         :type joceky_id: int

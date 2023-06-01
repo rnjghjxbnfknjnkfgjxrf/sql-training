@@ -20,7 +20,7 @@ INIT_DB_QUERY = """
                 name TEXT NOT NULL,
                 age INTEGER NOT NULL,
                 address TEXT NOT NULL,
-                rating INTEGER NOT NULL,
+                rating INTEGER DEFAULT 0 NOT NULL,
                 PRIMARY KEY (id),
                 CHECK (age >= 18),
                 CHECK (rating >= 0)
@@ -80,7 +80,7 @@ INIT_DB_QUERY = """
                     FROM "Race_result";
                 END;
 
-                CREATE TRIGGER IF NOT EXISTS update_jockey_rating 
+                CREATE TRIGGER IF NOT EXISTS increase_jockey_rating 
                 AFTER INSERT ON "Race_result"
                 BEGIN
                     UPDATE "Jockey"
@@ -94,8 +94,23 @@ INIT_DB_QUERY = """
                     WHERE
                         id = NEW.jockey_id;
                 END;
-                
-                CREATE TRIGGER IF NOT EXISTS check_race_date
+
+                CREATE TRIGGER IF NOT EXISTS decrease_jockey_rating 
+                AFTER DELETE ON "Race_result"
+                BEGIN
+                    UPDATE "Jockey"
+                    SET rating = (CASE
+                                    WHEN (OLD.result_place = 1) THEN (rating - 50)
+                                    WHEN (OLD.result_place = 2) THEN (rating - 25)
+                                    WHEN (OLD.result_place = 3) THEN (rating - 15)
+                                    WHEN (OLD.result_place IN (4, 10)) THEN (rating - 5)
+                                    WHEN (OLD.result_place > 10) THEN (rating - 1)
+                                  END)
+                    WHERE
+                        id = OLD.jockey_id;
+                END;
+
+                CREATE TRIGGER IF NOT EXISTS check_race_date_on_creation
                 BEFORE INSERT ON "Race"
                 WHEN 
                     EXISTS (
@@ -103,6 +118,21 @@ INIT_DB_QUERY = """
                             FROM "Race"
                             WHERE
                                 date = NEW.date AND hippodrome_id = NEW.hippodrome_id
+                    )
+                BEGIN
+                    SELECT RAISE(ABORT, 'Нельзя создавать заезд с указанной датой на данном ипподроме, т.к. это время занято');
+                END;
+
+                CREATE TRIGGER IF NOT EXISTS check_race_date_on_update
+                BEFORE UPDATE ON "Race"
+                WHEN 
+                    EXISTS (
+                            SELECT id
+                            FROM "Race"
+                            WHERE
+                                date = NEW.date 
+                                AND hippodrome_id = NEW.hippodrome_id
+                                AND id != OLD.id
                     )
                 BEGIN
                     SELECT RAISE(ABORT, 'Нельзя создавать заезд с указанной датой на данном ипподроме, т.к. это время занято');

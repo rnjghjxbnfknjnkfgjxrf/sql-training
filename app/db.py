@@ -44,12 +44,14 @@ class DB:
                  выполнения запроса.
         """
         try:
-            res = self._cursor.execute(query, args)
+            #res = self._cursor.execute(query, args)
+            self._cursor.execute(query, args)
             self._connection.commit()
         except Exception as err:
             raise DBExecuteQueryError(str(err))
         else:
-            return res.fetchall()
+            #return res.fetchall()
+            return self._cursor.fetchall()
 
     @staticmethod
     def validate_name(name: str) -> bool:
@@ -70,10 +72,8 @@ class DB:
 
     @staticmethod
     def _parse_phone_number(phone_number: str) -> str:
-        if phone_number.startswith('+'):
-            return ''.join(re.split('[ -]', phone_number[2:]))
-        else:
-            return ''.join(re.split('[ -]', phone_number[1:]))
+        start_index = 2 if phone_number.startswith('+') else 1
+        return '8' + ''.join(re.split('[ -]', phone_number[start_index:]))
 
     @staticmethod
     def validate_date(date: str) -> bool:
@@ -200,8 +200,7 @@ class DB:
     def create_jockey(self,
                      name: str,
                      age: str,
-                     address: str,
-                     rating: str) -> int:
+                     address: str) -> int:
         """
         Создание нового жокея.
 
@@ -211,16 +210,11 @@ class DB:
         :type age: str
         :param address: address
         :type address: str
-        :param rating: рейтинг
-        :type rating: str
 
         :raises NameError: если имя не прошло валидацию
         :raises JockeyAgeError: если значение строки с 
                                 возрастом не равно целому
                                 числу >= 18
-        :raises JockeyRatingError: если значение строки с 
-                                   рейтингом не равно целому
-                                   числу >= 0
 
         :return: id созданного жокея
         """
@@ -231,20 +225,15 @@ class DB:
         except ValueError:
             raise JockeyAgeError()
 
-        try:
-            rating = int(rating)
-        except ValueError:
-            raise JockeyRatingError()
-
         if not DB.validate_name(name):
             raise NameError()
         elif age < 18:
             raise JockeyAgeError()
 
         self._execute("""
-            INSERT INTO "Jockey" (name, age, address, rating)
-            VALUES (?, ?, ?, ?);
-        """, name.capitalize(), age, address, rating)
+            INSERT INTO "Jockey" (name, age, address)
+            VALUES (?, ?, ?);
+        """, name.capitalize(), age, address.capitalize())
 
         return self._cursor.lastrowid
 
@@ -282,7 +271,7 @@ class DB:
         self._execute("""
             INSERT INTO "Race" (name, date, hippodrome_id)
             VALUES (?, date(?), ?);
-        """, name, date, hippodrome_id)
+        """, name.capitalize(), date, hippodrome_id)
 
         return self._cursor.lastrowid
 
@@ -291,7 +280,7 @@ class DB:
                            result_time: str,
                            race_id: int,
                            horse_id: int,
-                           jockey_id: int):
+                           jockey_id: int) -> None:
         """
         Создание нового результата заезда.
 
@@ -1136,6 +1125,241 @@ class DB:
         """, hippodrome_id)
 
 
+    def update_hippodrome(self, name: str, hippodrome_id: int) -> None:
+        """
+        Редактирование ипподрома.
+
+        :param hippodrome_id: id ипподрома
+        :type hippodrome_id: int
+        :param name: название 
+        :type name: str
+
+        :raises HippodromeNameError: если имя не прошло
+                                     валидацию или не
+                                     является уникальным  
+        :raises IDError: если id ипподрома
+                         не целое число
+        """
+        if not isinstance(hippodrome_id, int):
+            raise IDError()
+
+        name = name.strip().lower()
+
+        if re.search('[0-9]', name) is not None:
+            raise HippodromeNameError('incorrect_name')
+        name = name.capitalize()
+        if any(name in x for x in self._execute('SELECT name FROM "Hippodrome" WHERE id != ?;', hippodrome_id)):
+            raise HippodromeNameError('name_not_unique')
+
+        self._execute("""
+            UPDATE 
+                "Hippodrome"
+            SET
+                name = ?
+            WHERE
+                id = ?;
+        """, name.capitalize(), hippodrome_id)
+
+    def update_race(self,
+                    name: str,
+                    date: str,
+                    hippodrome_id: int,
+                    race_id: int) -> None:
+        """
+        Редактирование заезда.
+
+        :param name: название
+        :type name: str
+        :param date: дата
+        :type date: str
+        :param hippodrome_id: id ипподрома
+        :type hippodrome_id: int
+        :param race_id: id заезда
+        :type race_id: int
+
+        :raises IDError: если id ипподрома или заезда не целое число
+        :raises NameError: если название не прошло валидацию
+        :raises DateError: если дата не прошла валидацию
+        """
+        if not isinstance(hippodrome_id, int)\
+           or not isinstance(race_id, int):
+            raise IDError()
+
+        name = name.strip().lower()
+        date = date.strip()
+
+        if not DB.validate_race_name(name):
+            raise NameError()
+        elif not DB.validate_date(date):
+            raise DateError()
+
+        self._execute("""
+            UPDATE "Race"
+            SET
+                name = ?, 
+                date = DATE(?),
+                hippodrome_id = ?
+            WHERE
+                id = ?;
+        """, name.capitalize(), date, hippodrome_id, race_id)
+
+        return self._cursor.lastrowid
+
+    def update_owner(self,
+                     name: str,
+                     telephone: str,
+                     address: str,
+                     owner_id: int) -> None:
+        """
+        Редактирование владельца.
+
+        :param name: имя
+        :type name: str
+        :param telephone: номер телефона
+        :type telephone: str
+        :param address: address
+        :type address: str
+
+        :raises IDError: если id владельца не целое число
+        :raises NameError: если имя не прошло валидацию
+        :raises PhoneNumberError: если номер не прошел валидацию
+                                  или не является уникальным
+        """
+        if not isinstance(owner_id, int):
+            raise IDError()
+
+        name = name.strip().lower()
+        telephone.strip()
+
+        if not DB.validate_name(name):
+            raise NameError()
+        elif not DB.validate_phone_number(telephone):
+            raise PhoneNumberError('incorrect_phone')
+        telephone = self._parse_phone_number(telephone)
+        if any(telephone in x for x in self._execute('SELECT telephone FROM "Owner" WHERE id != ?;',
+                                                      owner_id)):
+            raise PhoneNumberError('phone_not_unique')
+
+        self._execute("""
+            UPDATE
+                "Owner"
+            SET
+                name = ?,
+                telephone = ?,
+                address = ?
+            WHERE
+                id = ?;
+        """, name.capitalize(), telephone, address, owner_id)
+
+        return self._cursor.lastrowid
+
+    def update_jockey(self,
+                     name: str,
+                     age: str,
+                     address: str,
+                     jockey_id: int) -> None:
+        """
+        Редактирование жокея.
+
+        :param jockey_id: id жокея
+        :type jockey_id: int
+        :param name: имя
+        :type name: str
+        :param age: возраст
+        :type age: str
+        :param address: address
+        :type address: str
+
+        :raises IDError: если id жокея не целое число
+        :raises NameError: если имя не прошло валидацию
+        :raises JockeyAgeError: если значение строки с 
+                                возрастом не равно целому
+                                числу >= 18
+        """
+        if not isinstance(jockey_id, int):
+            raise IDError()
+
+        name = name.strip().lower()
+        address = address.strip()
+        try:
+            age = int(age)
+        except ValueError:
+            raise JockeyAgeError()
+
+        if not DB.validate_name(name):
+            raise NameError()
+        elif age < 18:
+            raise JockeyAgeError()
+
+        self._execute("""
+            UPDATE 
+                "Jockey"
+            SET
+                name = ?,
+                age = ?,
+                address = ?
+            WHERE
+                id = ?;
+        """, name.capitalize(), age, address, jockey_id)
+
+    def update_horse(self,
+                     name: str,
+                     age: int,
+                     gender: Union[Literal['мужской'], Literal['женский']],
+                     owner_id: int,
+                     horse_id: int) -> None:
+        """
+        Редактирование лошади.
+
+        :param horse_id: id коня
+        :type horse_id: int
+        :param name: имя
+        :type name: str
+        :param age: возраст
+        :type age: str
+        :param gender: пол
+        :type gender: str
+        :param owner_id: id владельца
+        :type owner_id: int
+
+        :raises IDError: если id коня или владельца не целое число
+        :raises NameError: если имя не прошло валидацию
+        :raises GenderError: если значение строки с полом
+                             не равно "мужской" или "женский"
+        :raises AgeError: если значение строки с возрастом
+                          не является целым числом > 0
+        """
+        if not isinstance(horse_id, int)\
+           or not isinstance(owner_id, int):
+            raise IDError()
+
+        name = name.strip().lower()
+        gender = gender.strip().lower()
+        try:
+            age = int(age)
+        except ValueError:
+            raise AgeError()
+
+        if not DB.validate_name(name):
+            raise NameError()
+        elif age < 0:
+            raise AgeError()
+        elif gender not in ('мужской', 'женский'):
+            raise GenderError()
+
+        self._execute("""
+            UPDATE
+                "Horse"
+            SET
+                name = ?,
+                age = ?,
+                gender = ?,
+                owner_id = ?
+            WHERE
+                id = ?;
+        """, name.capitalize(), age, gender, owner_id, horse_id)
+
+
 class DBExecuteQueryError(Exception):
     def __init__(self, err_message: str) -> None:
         super().__init__('Ошибка при выполнении запроса к БД:\n'+err_message)
@@ -1143,7 +1367,7 @@ class DBExecuteQueryError(Exception):
 
 class PhoneNumberError(Exception):
     def __init__(self, message_type: Union[Literal['incorrect_phone'], Literal['phone_not_unique']]) -> None:
-        if message_type == 'incorrect_name':
+        if message_type == 'incorrect_phone':
             message = 'Неправильный формат номера телефона:\n' +\
                       'Номер должен состоять из 11 цифр, начинаться с 8 или с +7,\n ' +\
                       'в качестве разделителей можно использовать пробел или знак тире.'

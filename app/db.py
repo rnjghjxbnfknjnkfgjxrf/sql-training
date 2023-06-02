@@ -328,7 +328,8 @@ class DB:
         except ValueError:
             raise RaceResultPlaceError()
 
-        race_results = self._execute('SELECT horse_id, jockey_id, result_place FROM "Race_result";')
+        race_results = self._execute('SELECT horse_id, jockey_id, result_place FROM "Race_result" WHERE race_id = ?;',
+                                     race_id)
 
         if any(horse_id == x[0] for x in race_results):
             raise RaceResultCorrectnessError('Указанная лошадь уже учавствует в этом заезде')

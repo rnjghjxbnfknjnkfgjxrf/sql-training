@@ -59,9 +59,7 @@ INIT_DB_QUERY = """
                 FOREIGN KEY (horse_id) REFERENCES "Horse" ON DELETE CASCADE,
                 FOREIGN KEY (jockey_id) REFERENCES "Jockey" ON DELETE CASCADE,
                 CHECK (result_place BETWEEN 1 and 20),
-                CHECK (result_time > 0),
-                UNIQUE (jockey_id),
-                UNIQUE (horse_id)
+                CHECK (result_time > 0)
                 );
 
                 CREATE TRIGGER IF NOT EXISTS check_is_race_result_correct
@@ -77,7 +75,9 @@ INIT_DB_QUERY = """
                             WHEN (NEW.jockey_id) IN jockeys_in_race THEN (RAISE(ABORT, 'Указанный жокей уже учавствует в этом заезде'))
                             WHEN (NEW.horse_id) in horses_in_race THEN (RAISE(ABORT, 'Указанная лошадь уже учавствует в этом заезде'))
                         END
-                    FROM "Race_result";
+                    FROM "Race_result"
+                    WHERE
+                        race_id = NEW.race_id;
                 END;
 
                 CREATE TRIGGER IF NOT EXISTS increase_jockey_rating 

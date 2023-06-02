@@ -1003,7 +1003,7 @@ class App:
             command=lambda: self._show_hippodrome_info(race['info'][3])
         ).grid(row=2, column=1, pady=10, sticky='ew')
 
-        scrollable_frame = ctk.CTkScrollableFrame(window, height=300)
+        scrollable_frame = ctk.CTkScrollableFrame(window, height=300, width=300)
         scrollable_frame.grid(row=3, column=0, rowspan=4, columnspan=2, sticky='ew')
         for result in race['results']:
             RaceResultFrame(scrollable_frame,

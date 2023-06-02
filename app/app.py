@@ -589,7 +589,7 @@ class App:
         :type race_info_window: CTkToplevel
         """
         window = ctk.CTkToplevel()
-        window.title('Добавление резульата')
+        window.title('Добавление результата')
         window.geometry('500x300')
 
         jockeys = [f'{x[0]} - {x[1]}' for x in self._db.get_jockeys_that_not_in_race(race_id)]
@@ -1814,7 +1814,7 @@ class RaceResultFrame(ctk.CTkFrame):
         LabelWithBg(self, text='Жокей:',font=ctk.CTkFont(size=18)).grid(row=0, column=0, pady=10, padx=10, sticky='ew')
         LabelWithBg(self, text='Лошадь:',font=ctk.CTkFont(size=18)).grid(row=1, column=0, pady=10, padx=10, sticky='ew')
         LabelWithBg(self, text='Место:',font=ctk.CTkFont(size=18)).grid(row=2, column=0, pady=10, padx=10, sticky='ew')
-        LabelWithBg(self, text='Времся:',font=ctk.CTkFont(size=18)).grid(row=3, column=0, pady=10, padx=10, sticky='ew')
+        LabelWithBg(self, text='Время:',font=ctk.CTkFont(size=18)).grid(row=3, column=0, pady=10, padx=10, sticky='ew')
 
         ctk.CTkButton(self,
                       text=race_result[1],

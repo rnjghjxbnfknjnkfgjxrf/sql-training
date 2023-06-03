@@ -25,4 +25,4 @@ python3 main.py
 ```
 
 ## Схема БД
-![alt text](https://github.com/rnjghjxbnfknjnkfgjxrf/sql-training/blob/main/db_schema.png?raw=true)
+![Pucture of db schema](https://github.com/rnjghjxbnfknjnkfgjxrf/sql-training/blob/main/db_schema.png?raw=True)
